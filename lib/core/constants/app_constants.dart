@@ -9,8 +9,16 @@ class AppStrings {
   static const String brand = 'Gurukula';
 
   /// Product tagline.
-  static const String tagline = 'Study smarter, even offline.';
+  static const String tagline = 'Your offline AI study companion';
 
-  /// One-line value statement.
-  static const String subtitle = 'Your private, on-device study assistant.';
+  /// Hero headline on the Welcome screen.
+  static const String heroHeadline = 'Study smarter, even offline.';
+
+  /// Welcome subtitle.
+  static const String welcomeSubtitle =
+      'Summarize notes, create flashcards, and build ideas with your private '
+      'study companion.';
+
+  /// Privacy promise reused across screens.
+  static const String privacyNote = 'Your study data stays on this device';
 }
