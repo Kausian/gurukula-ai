@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../core/utils/date_format.dart';
@@ -80,7 +81,14 @@ class HomeScreen extends ConsumerWidget {
                     accent: tool.accent,
                     icon: tool.icon,
                     label: tool.label,
-                    onTap: () => _comingSoon(context),
+                    onTap: () {
+                      if (tool.label == 'Upload notes' ||
+                          tool.label == 'Paste text') {
+                        context.push('/paste');
+                      } else {
+                        _comingSoon(context);
+                      }
+                    },
                   );
                 },
               ),

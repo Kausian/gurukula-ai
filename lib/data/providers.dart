@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart'; // StateProvider (Riverpod 3.x)
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
@@ -51,13 +53,44 @@ final activityRepositoryProvider = Provider<ActivityRepository>(
 );
 
 // ---------------------------------------------------------------------------
+// Reactivity: emits whenever any study-data box changes, so the derived
+// providers and the Study Workspace rebuild automatically after writes.
+// ---------------------------------------------------------------------------
+
+final dataChangesProvider = StreamProvider<int>((ref) {
+  final boxes = <Box<dynamic>>[
+    ref.watch(profileRepositoryProvider).box,
+    ref.watch(documentRepositoryProvider).box,
+    ref.watch(summaryRepositoryProvider).box,
+    ref.watch(flashcardRepositoryProvider).box,
+    ref.watch(rewriteRepositoryProvider).box,
+    ref.watch(ideaRepositoryProvider).box,
+    ref.watch(activityRepositoryProvider).box,
+  ];
+  final controller = StreamController<int>();
+  // Emit a distinct, incrementing value per change so watchers always rebuild
+  // (an AsyncData<void>(null) would be deduped as "unchanged" by Riverpod).
+  var tick = 0;
+  final subs =
+      boxes.map((b) => b.watch().listen((_) => controller.add(++tick))).toList();
+  ref.onDispose(() {
+    for (final sub in subs) {
+      sub.cancel();
+    }
+    controller.close();
+  });
+  return controller.stream;
+});
+
+// ---------------------------------------------------------------------------
 // Derived read models for the screens.
 // ---------------------------------------------------------------------------
 
 /// The current student profile (null until one is created).
-final currentProfileProvider = Provider<UserProfile?>(
-  (ref) => ref.watch(profileRepositoryProvider).current,
-);
+final currentProfileProvider = Provider<UserProfile?>((ref) {
+  ref.watch(dataChangesProvider);
+  return ref.watch(profileRepositoryProvider).current;
+});
 
 /// Aggregate counts shown on Home and Profile.
 class DashboardStats {
@@ -75,6 +108,7 @@ class DashboardStats {
 }
 
 final dashboardStatsProvider = Provider<DashboardStats>((ref) {
+  ref.watch(dataChangesProvider);
   return DashboardStats(
     notes: ref.watch(documentRepositoryProvider).getAll().length,
     flashcards: ref.watch(flashcardRepositoryProvider).getAll().length,
@@ -84,9 +118,10 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
 });
 
 /// Recent activity events for the Home dashboard.
-final recentActivityProvider = Provider<List<ActivityEvent>>(
-  (ref) => ref.watch(activityRepositoryProvider).recent(),
-);
+final recentActivityProvider = Provider<List<ActivityEvent>>((ref) {
+  ref.watch(dataChangesProvider);
+  return ref.watch(activityRepositoryProvider).recent();
+});
 
 // ---------------------------------------------------------------------------
 // Library view model: a single list across all saved content types.
@@ -113,6 +148,7 @@ final libraryFilterProvider = StateProvider<int>((ref) => 0);
 
 /// All saved items, newest first, ready for the Library list.
 final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
+  ref.watch(dataChangesProvider);
   final documents = ref.watch(documentRepositoryProvider).getAll();
   final summaries = ref.watch(summaryRepositoryProvider).getAll();
   final flashcards = ref.watch(flashcardRepositoryProvider).getAll();

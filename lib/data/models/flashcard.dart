@@ -31,4 +31,18 @@ class Flashcard {
   final bool isReviewed;
   @HiveField(6)
   final DateTime createdAt;
+
+  /// Returns a copy with selected fields changed (same id, so it overwrites in
+  /// Hive). Used to toggle [isReviewed].
+  Flashcard copyWith({bool? isReviewed, Difficulty? difficulty}) {
+    return Flashcard(
+      id: id,
+      documentId: documentId,
+      question: question,
+      answer: answer,
+      difficulty: difficulty ?? this.difficulty,
+      isReviewed: isReviewed ?? this.isReviewed,
+      createdAt: createdAt,
+    );
+  }
 }

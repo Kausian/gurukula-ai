@@ -13,6 +13,8 @@ import '../features/onboarding/splash_screen.dart';
 import '../features/onboarding/welcome_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shell/main_shell.dart';
+import '../features/study/paste_text_screen.dart';
+import '../features/study/study_workspace_screen.dart';
 import '../features/upload/upload_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -109,6 +111,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const ProfileScreen()),
           ]),
         ],
+      ),
+      // Full-screen study routes (above the bottom nav).
+      GoRoute(
+        path: '/paste',
+        builder: (context, state) => const PasteTextScreen(),
+      ),
+      GoRoute(
+        path: '/workspace/:id',
+        builder: (context, state) =>
+            StudyWorkspaceScreen(documentId: state.pathParameters['id']!),
       ),
     ],
   );

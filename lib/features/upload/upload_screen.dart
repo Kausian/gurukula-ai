@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../core/widgets/app_card.dart';
@@ -12,12 +13,6 @@ import '../../core/widgets/status_badge.dart';
 /// shows its readiness state.
 class UploadScreen extends StatelessWidget {
   const UploadScreen({super.key});
-
-  void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming in a later phase')),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +36,7 @@ class UploadScreen extends StatelessWidget {
               title: 'Paste text',
               subtitle: 'Drop in lecture notes or any text.',
               badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
-              onTap: () => _comingSoon(context),
+              onTap: () => context.push('/paste'),
             ),
             const SizedBox(height: 12),
             _OptionCard(
