@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
+import '../../core/utils/date_format.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/challenge_card.dart';
 import '../../core/widgets/icon_chip.dart';
@@ -8,13 +10,12 @@ import '../../core/widgets/learning_tool_card.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stat_card.dart';
+import '../../data/models/activity_event.dart';
+import '../../data/models/enums.dart';
+import '../../data/providers.dart';
 
-/// Home dashboard: a colorful, interactive study space.
-///
-/// Phase 1.5 shell: hero workspace card, explore-tools row, progress stats,
-/// a daily challenge and a recent-activity empty state. Real data lands in
-/// Phase 2.
-class HomeScreen extends StatelessWidget {
+/// Home dashboard: a colorful, interactive study space backed by local data.
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static const List<_Tool> _tools = [
@@ -31,38 +32,41 @@ class HomeScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stats = ref.watch(dashboardStatsProvider);
+    final activity = ref.watch(recentActivityProvider);
+    final profile = ref.watch(currentProfileProvider);
+
+    final greeting =
+        profile == null ? 'Your study space' : 'Hi, ${profile.username}';
 
     return Scaffold(
       body: SafeArea(
         bottom: false,
         child: ListView(
-          // Extra bottom padding so the last card clears the bottom nav bar.
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 40),
           children: [
             PageHeader(
-              title: 'Your study space',
+              title: greeting,
               subtitle: 'Offline-first study, all on your device.',
               trailing: Container(
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: scheme.surface,
+                  color: Theme.of(context).colorScheme.surface,
                   shape: BoxShape.circle,
-                  border: Border.all(color: scheme.outline),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline),
                 ),
                 child: Icon(Icons.person_rounded,
-                    color: scheme.onSurfaceVariant, size: 24),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 24),
               ),
             ),
             const SizedBox(height: 22),
 
-            _WorkspaceHero(),
+            const _WorkspaceHero(),
             const SizedBox(height: 28),
 
-            // Explore tools (horizontal).
             const SectionHeader(title: 'Explore tools'),
             SizedBox(
               height: 142,
@@ -83,14 +87,13 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            // Progress.
             const SectionHeader(title: 'Your progress'),
             Row(
               children: [
                 Expanded(
                   child: StatCard(
                       icon: Icons.summarize_rounded,
-                      value: '0',
+                      value: '${stats.notes}',
                       label: 'Notes',
                       color: AppAccents.lavender.fill),
                 ),
@@ -98,7 +101,7 @@ class HomeScreen extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                       icon: Icons.style_rounded,
-                      value: '0',
+                      value: '${stats.flashcards}',
                       label: 'Flashcards',
                       color: AppAccents.mint.fill),
                 ),
@@ -106,7 +109,7 @@ class HomeScreen extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                       icon: Icons.lightbulb_rounded,
-                      value: '0',
+                      value: '${stats.ideas}',
                       label: 'Ideas',
                       color: AppAccents.coral.fill),
                 ),
@@ -114,7 +117,6 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            // Daily challenge.
             ChallengeCard(
               accent: AppAccents.coral,
               eyebrow: "Today's boost",
@@ -124,33 +126,8 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            // Recent activity.
             const SectionHeader(title: 'Recent activity'),
-            AppCard(
-              child: Row(
-                children: [
-                  IconChip(
-                      icon: Icons.history_rounded,
-                      color: scheme.onSurfaceVariant),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('No activity yet',
-                            style: theme.textTheme.titleSmall),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Your summaries, flashcards and ideas will appear '
-                          'here as you study.',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _RecentActivity(activity: activity),
           ],
         ),
       ),
@@ -158,8 +135,124 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+/// Either a list of recent events, or a friendly empty card.
+class _RecentActivity extends StatelessWidget {
+  const _RecentActivity({required this.activity});
+
+  final List<ActivityEvent> activity;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (activity.isEmpty) {
+      return AppCard(
+        child: Row(
+          children: [
+            IconChip(
+                icon: Icons.history_rounded,
+                color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('No activity yet', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Your summaries, flashcards and ideas will appear here as '
+                    'you study.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var i = 0; i < activity.length; i++) ...[
+            if (i > 0) const Divider(height: 1),
+            _ActivityRow(event: activity[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ActivityRow extends StatelessWidget {
+  const _ActivityRow({required this.event});
+
+  final ActivityEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = _styleFor(event.type);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          IconChip(icon: style.icon, color: style.color, size: 40),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(event.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall),
+                const SizedBox(height: 2),
+                Text(style.label, style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(timeAgo(event.createdAt), style: theme.textTheme.labelMedium),
+        ],
+      ),
+    );
+  }
+
+  _ActivityStyle _styleFor(ActivityType type) {
+    switch (type) {
+      case ActivityType.documentUploaded:
+        return _ActivityStyle(
+            Icons.upload_file_rounded, AppAccents.lavender.fill, 'Note added');
+      case ActivityType.summaryCreated:
+        return _ActivityStyle(
+            Icons.summarize_rounded, AppAccents.mint.fill, 'Summary created');
+      case ActivityType.flashcardCreated:
+        return _ActivityStyle(
+            Icons.style_rounded, AppAccents.lime.fill, 'Flashcards created');
+      case ActivityType.ideaSaved:
+        return _ActivityStyle(
+            Icons.lightbulb_rounded, AppAccents.coral.fill, 'Idea saved');
+      case ActivityType.rewriteCreated:
+        return _ActivityStyle(
+            Icons.edit_rounded, AppAccents.sky.fill, 'Text rewritten');
+    }
+  }
+}
+
+class _ActivityStyle {
+  const _ActivityStyle(this.icon, this.color, this.label);
+  final IconData icon;
+  final Color color;
+  final String label;
+}
+
 /// Filled hero card showing the offline workspace and its privacy state.
 class _WorkspaceHero extends StatelessWidget {
+  const _WorkspaceHero();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -172,7 +265,6 @@ class _WorkspaceHero extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          // Protection ring.
           SizedBox(
             width: 66,
             height: 66,

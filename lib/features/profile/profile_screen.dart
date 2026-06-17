@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/icon_chip.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../data/providers.dart';
 
 /// Profile: student card, study stats, AI status, settings and about.
 ///
-/// Values are placeholders for Phase 1.5. Google Sign-In and the real profile
-/// arrive in Phase 3; settings become functional in Phase 8.
-class ProfileScreen extends StatelessWidget {
+/// The student card and stats read from local data. Google Sign-In replaces
+/// the seeded profile in Phase 3; settings become functional in Phase 8.
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   void _comingSoon(BuildContext context) {
@@ -22,9 +25,16 @@ class ProfileScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final profile = ref.watch(currentProfileProvider);
+    final stats = ref.watch(dashboardStatsProvider);
+
+    final name = profile?.username ?? 'Guest student';
+    final subtitle = profile == null
+        ? 'Sign in to personalise your space.'
+        : '${profile.studyLevel} · ${profile.mainSubject}';
 
     return Scaffold(
       body: SafeArea(
@@ -51,14 +61,18 @@ class ProfileScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Guest student',
-                            style: theme.textTheme.titleLarge),
+                        Text(name, style: theme.textTheme.titleLarge),
                         const SizedBox(height: 3),
-                        Text('Sign in to personalise your space.',
-                            style: theme.textTheme.bodySmall),
+                        Text(subtitle, style: theme.textTheme.bodySmall),
                         const SizedBox(height: 10),
-                        const StatusBadge(
-                            label: 'Not signed in', tone: BadgeTone.neutral),
+                        StatusBadge(
+                          label: profile == null
+                              ? 'Not signed in'
+                              : 'Local profile',
+                          tone: profile == null
+                              ? BadgeTone.neutral
+                              : BadgeTone.success,
+                        ),
                       ],
                     ),
                   ),
@@ -74,7 +88,7 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                       icon: Icons.summarize_rounded,
-                      value: '0',
+                      value: '${stats.notes}',
                       label: 'Notes',
                       color: AppAccents.lavender.fill),
                 ),
@@ -82,7 +96,7 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                       icon: Icons.style_rounded,
-                      value: '0',
+                      value: '${stats.flashcards}',
                       label: 'Flashcards',
                       color: AppAccents.mint.fill),
                 ),
@@ -90,11 +104,27 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                       icon: Icons.lightbulb_rounded,
-                      value: '0',
+                      value: '${stats.ideas}',
                       label: 'Ideas',
                       color: AppAccents.coral.fill),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            AppCard(
+              child: Row(
+                children: [
+                  IconChip(
+                      icon: Icons.timeline_rounded, color: scheme.primary),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text('Total study sessions',
+                        style: theme.textTheme.titleSmall),
+                  ),
+                  Text('${stats.sessions}',
+                      style: theme.textTheme.headlineSmall),
+                ],
+              ),
             ),
             const SizedBox(height: 28),
 
@@ -143,7 +173,7 @@ class ProfileScreen extends StatelessWidget {
                   _SettingRow(
                       icon: Icons.translate_rounded,
                       label: 'Language',
-                      value: 'English',
+                      value: profile?.preferredLanguage ?? 'English',
                       onTap: () => _comingSoon(context)),
                   const Divider(height: 1),
                   _SettingRow(
@@ -172,7 +202,7 @@ class ProfileScreen extends StatelessWidget {
                   Text('${AppStrings.tagline}. Version 1.0.0',
                       style: theme.textTheme.bodySmall),
                   const SizedBox(height: 12),
-                  Text('Flutter · Riverpod · Material 3 · On-device AI',
+                  Text('Flutter · Riverpod · Hive · Material 3 · On-device AI',
                       style: theme.textTheme.labelMedium),
                 ],
               ),
