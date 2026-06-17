@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -11,12 +14,26 @@ import '../../data/models/summary.dart';
 import '../../data/providers.dart';
 import '../../services/ai_service.dart';
 import '../../services/mock_ai_service.dart';
+import '../../services/on_device_ai_service.dart';
 
-/// The active AI implementation. Mock for now; Gemini Nano drops in here later.
-final aiServiceProvider = Provider<AiService>((ref) => const MockAiService());
+/// The active AI implementation.
+///
+/// On Android we use the on-device bridge (ML Kit GenAI / Gemini Nano), which
+/// falls back to the mock per feature when the device or a feature is
+/// unavailable. Everywhere else we use the mock directly.
+final aiServiceProvider = Provider<AiService>((ref) {
+  const fallback = MockAiService();
+  if (!kIsWeb && Platform.isAndroid) {
+    return OnDeviceAiService(fallback: fallback);
+  }
+  return fallback;
+});
 
-/// Current on-device AI mode, shown in the Profile status card.
-final aiModeProvider = Provider<AiAvailability>((ref) => AiAvailability.mock);
+/// Current on-device AI mode, shown in the Profile status card. Async because
+/// it asks the native side whether Gemini Nano is available.
+final aiModeProvider = FutureProvider<AiAvailability>((ref) {
+  return ref.watch(aiServiceProvider).checkAvailability();
+});
 
 // ---------------------------------------------------------------------------
 // Workspace read models, keyed by document id. All rebuild on data changes.

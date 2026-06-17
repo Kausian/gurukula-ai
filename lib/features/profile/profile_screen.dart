@@ -10,7 +10,9 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../data/providers.dart';
+import '../../services/ai_service.dart';
 import '../auth/auth_providers.dart';
+import '../study/study_providers.dart';
 
 /// Profile: student card, study stats, AI status, settings and about.
 ///
@@ -32,6 +34,7 @@ class ProfileScreen extends ConsumerWidget {
     final profile = ref.watch(currentProfileProvider);
     final stats = ref.watch(dashboardStatsProvider);
     final user = ref.watch(currentUserProvider);
+    final aiMode = ref.watch(aiModeProvider);
 
     final name = profile?.username ?? user?.displayName ?? 'Guest student';
     final subtitle = profile == null
@@ -138,23 +141,20 @@ class ProfileScreen extends ConsumerWidget {
             AppCard(
               padding: EdgeInsets.zero,
               child: Column(
-                children: const [
-                  _StatusRow(
-                      label: 'Gemini Nano',
-                      badge: StatusBadge(
-                          label: 'Mock mode', tone: BadgeTone.neutral)),
-                  Divider(height: 1),
-                  _StatusRow(
+                children: [
+                  _StatusRow(label: 'Gemini Nano', badge: _aiBadge(aiMode)),
+                  const Divider(height: 1),
+                  const _StatusRow(
                       label: 'Offline AI',
                       badge: StatusBadge(
                           label: 'Ready', tone: BadgeTone.success)),
-                  Divider(height: 1),
-                  _StatusRow(
+                  const Divider(height: 1),
+                  const _StatusRow(
                       label: 'Local storage',
                       badge: StatusBadge(
                           label: 'Ready', tone: BadgeTone.success)),
-                  Divider(height: 1),
-                  _StatusRow(
+                  const Divider(height: 1),
+                  const _StatusRow(
                       label: 'OCR',
                       badge:
                           StatusBadge(label: 'Later', tone: BadgeTone.neutral)),
@@ -245,6 +245,29 @@ class ProfileScreen extends ConsumerWidget {
       }
     }
   }
+}
+
+/// Maps the on-device AI availability to a status badge.
+StatusBadge _aiBadge(AsyncValue<AiAvailability> mode) {
+  return mode.when(
+    loading: () =>
+        const StatusBadge(label: 'Checking', tone: BadgeTone.neutral),
+    error: (_, _) =>
+        const StatusBadge(label: 'Mock mode', tone: BadgeTone.neutral),
+    data: (availability) {
+      switch (availability) {
+        case AiAvailability.available:
+          return const StatusBadge(label: 'Available', tone: BadgeTone.success);
+        case AiAvailability.downloading:
+          return const StatusBadge(label: 'Downloading', tone: BadgeTone.info);
+        case AiAvailability.unsupported:
+          return const StatusBadge(
+              label: 'Not supported', tone: BadgeTone.neutral);
+        case AiAvailability.mock:
+          return const StatusBadge(label: 'Mock mode', tone: BadgeTone.neutral);
+      }
+    },
+  );
 }
 
 /// A label-and-badge row used in the AI status card.
