@@ -13,4 +13,12 @@ class ProfileRepository extends HiveRepository<UserProfile> {
     final all = getAll();
     return all.isEmpty ? null : all.first;
   }
+
+  /// The profile claimed by a given Google account, or null if none yet.
+  UserProfile? byGoogleUid(String uid) {
+    for (final profile in getAll()) {
+      if (profile.googleUid == uid) return profile;
+    }
+    return null;
+  }
 }

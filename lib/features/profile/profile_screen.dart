@@ -10,6 +10,7 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../data/providers.dart';
+import '../auth/auth_providers.dart';
 
 /// Profile: student card, study stats, AI status, settings and about.
 ///
@@ -30,11 +31,13 @@ class ProfileScreen extends ConsumerWidget {
     final scheme = theme.colorScheme;
     final profile = ref.watch(currentProfileProvider);
     final stats = ref.watch(dashboardStatsProvider);
+    final user = ref.watch(currentUserProvider);
 
-    final name = profile?.username ?? 'Guest student';
+    final name = profile?.username ?? user?.displayName ?? 'Guest student';
     final subtitle = profile == null
         ? 'Sign in to personalise your space.'
         : '${profile.studyLevel} · ${profile.mainSubject}';
+    final photoUrl = profile?.photoUrl ?? user?.photoURL;
 
     return Scaffold(
       body: SafeArea(
@@ -53,8 +56,12 @@ class ProfileScreen extends ConsumerWidget {
                   CircleAvatar(
                     radius: 32,
                     backgroundColor: scheme.primary.withValues(alpha: 0.16),
-                    child: Icon(Icons.person_rounded,
-                        size: 36, color: scheme.primary),
+                    backgroundImage:
+                        photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null
+                        ? Icon(Icons.person_rounded,
+                            size: 36, color: scheme.primary)
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -66,10 +73,8 @@ class ProfileScreen extends ConsumerWidget {
                         Text(subtitle, style: theme.textTheme.bodySmall),
                         const SizedBox(height: 10),
                         StatusBadge(
-                          label: profile == null
-                              ? 'Not signed in'
-                              : 'Local profile',
-                          tone: profile == null
+                          label: user == null ? 'Not signed in' : 'Signed in',
+                          tone: user == null
                               ? BadgeTone.neutral
                               : BadgeTone.success,
                         ),
@@ -207,10 +212,38 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Sign out.
+            AppCard(
+              onTap: () => _signOut(context, ref),
+              child: Row(
+                children: [
+                  Icon(Icons.logout_rounded, size: 22, color: scheme.error),
+                  const SizedBox(width: 14),
+                  Text('Sign out',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(color: scheme.error)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authServiceProvider).signOut();
+      // The auth gate redirects to /welcome automatically.
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not sign out. Please try again.')),
+        );
+      }
+    }
   }
 }
 

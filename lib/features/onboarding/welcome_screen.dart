@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/widgets/colorful_feature_card.dart';
+import '../auth/auth_providers.dart';
 
 /// First-time value screen: a bold, colorful student-app landing.
 ///
-/// Real Google Sign-In arrives in Phase 3; the CTA opens the app shell for now.
-class WelcomeScreen extends StatelessWidget {
+/// The CTA triggers real Google Sign-In; the auth gate then routes the student
+/// to profile creation (new account) or straight to Home.
+class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  ConsumerState<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
+  bool _busy = false;
 
   static const List<_Feature> _features = [
     _Feature(AppAccents.lavender, Icons.summarize_rounded, 'Summaries',
@@ -22,6 +31,22 @@ class WelcomeScreen extends StatelessWidget {
         'Everything stays on device'),
   ];
 
+  Future<void> _signIn() async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(authServiceProvider).signInWithGoogle();
+      // On success the auth gate redirects automatically.
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign-in failed. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -32,7 +57,6 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Brand wordmark.
               Row(
                 children: [
                   Container(
@@ -54,8 +78,6 @@ class WelcomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 36),
-
-              // Hero.
               Text(AppStrings.heroHeadline, style: theme.textTheme.displayLarge),
               const SizedBox(height: 14),
               Text(
@@ -64,8 +86,6 @@ class WelcomeScreen extends StatelessWidget {
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 28),
-
-              // Colorful feature grid.
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
@@ -84,12 +104,16 @@ class WelcomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 28),
-
-              // CTA.
               FilledButton.icon(
-                onPressed: () => context.go('/home'),
-                icon: const Icon(Icons.g_mobiledata_rounded, size: 30),
-                label: const Text('Continue with Google'),
+                onPressed: _busy ? null : _signIn,
+                icon: _busy
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : const Icon(Icons.g_mobiledata_rounded, size: 30),
+                label: Text(_busy ? 'Signing in' : 'Continue with Google'),
               ),
               const SizedBox(height: 12),
               Center(
