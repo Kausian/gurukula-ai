@@ -1,32 +1,38 @@
 import 'package:flutter/material.dart';
 
 /// Shown briefly while the auth state is resolving on startup.
+///
+/// Matches the native launch splash: the brand logo centered on the Gurukula
+/// violet, with a subtle loading indicator.
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
+  /// The Gurukula brand violet (matches the logo background and native splash).
+  static const Color _brand = Color(0xFF591EE8);
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
+    return const Scaffold(
+      backgroundColor: _brand,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(18),
+            SizedBox(
+              width: 200,
+              child: Image(
+                image: AssetImage('assets/logo/gurukula_logo.png'),
+                fit: BoxFit.contain,
               ),
-              child: Icon(Icons.school_rounded,
-                  color: theme.colorScheme.onPrimary, size: 34),
             ),
-            const SizedBox(height: 24),
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
+            SizedBox(height: 28),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Colors.white,
+              ),
             ),
           ],
         ),

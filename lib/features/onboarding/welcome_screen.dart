@@ -59,20 +59,17 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(14),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: Image.asset(
+                      'assets/logo/gurukula_logo.png',
+                      width: 58,
+                      height: 58,
+                      fit: BoxFit.cover,
                     ),
-                    child: Icon(Icons.school_rounded,
-                        color: theme.colorScheme.onPrimary, size: 26),
                   ),
-                  const SizedBox(width: 12),
-                  Text(AppStrings.brand, style: theme.textTheme.titleLarge),
                   const Spacer(),
-                  Text('offline',
+                  Text('offline-first',
                       style: theme.textTheme.labelSmall
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                 ],

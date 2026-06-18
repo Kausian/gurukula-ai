@@ -59,7 +59,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Gurukula'), findsOneWidget);
+    expect(find.text('Study smarter, even offline.'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
   });
 }
