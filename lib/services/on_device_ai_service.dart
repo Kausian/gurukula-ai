@@ -83,6 +83,21 @@ class OnDeviceAiService implements AiService {
     }
   }
 
+  // Idea Lab has no on-device model API, so these use the fallback directly.
+
+  @override
+  Future<AiIdea> generateIdea(IdeaBrief brief) => fallback.generateIdea(brief);
+
+  @override
+  Future<AiIdea> improveIdea(AiIdea current, {String guidance = ''}) =>
+      fallback.improveIdea(current, guidance: guidance);
+
+  @override
+  Future<String> projectPlanFor(AiIdea idea) => fallback.projectPlanFor(idea);
+
+  @override
+  Future<String> cvPitchFor(AiIdea idea) => fallback.cvPitchFor(idea);
+
   AiAvailability _mapAvailability(String? status) {
     switch (status) {
       case 'available':

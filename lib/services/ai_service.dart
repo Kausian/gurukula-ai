@@ -29,6 +29,70 @@ class AiFlashcardDraft {
   final Difficulty difficulty;
 }
 
+/// The inputs a student gives the Idea Lab to generate a new project idea.
+class IdeaBrief {
+  const IdeaBrief({
+    required this.subject,
+    required this.skillLevel,
+    required this.problemArea,
+    required this.techStack,
+    required this.timeLimit,
+    required this.zeroCost,
+  });
+
+  final String subject;
+  final Difficulty skillLevel;
+  final String problemArea;
+  final String techStack;
+  final String timeLimit;
+  final bool zeroCost;
+}
+
+/// A structured project idea produced by an [AiService] (maps to the Hive Idea).
+class AiIdea {
+  const AiIdea({
+    required this.title,
+    required this.problem,
+    required this.targetUsers,
+    required this.features,
+    required this.techStack,
+    required this.difficulty,
+    required this.mvpPlan,
+    required this.whyUnique,
+  });
+
+  final String title;
+  final String problem;
+  final List<String> targetUsers;
+  final List<String> features;
+  final List<String> techStack;
+  final Difficulty difficulty;
+  final String mvpPlan;
+  final String whyUnique;
+
+  AiIdea copyWith({
+    String? title,
+    String? problem,
+    List<String>? targetUsers,
+    List<String>? features,
+    List<String>? techStack,
+    Difficulty? difficulty,
+    String? mvpPlan,
+    String? whyUnique,
+  }) {
+    return AiIdea(
+      title: title ?? this.title,
+      problem: problem ?? this.problem,
+      targetUsers: targetUsers ?? this.targetUsers,
+      features: features ?? this.features,
+      techStack: techStack ?? this.techStack,
+      difficulty: difficulty ?? this.difficulty,
+      mvpPlan: mvpPlan ?? this.mvpPlan,
+      whyUnique: whyUnique ?? this.whyUnique,
+    );
+  }
+}
+
 /// Abstraction over the study AI features.
 ///
 /// Phase 4 ships [MockAiService]; Phase 5 adds a Gemini Nano implementation
@@ -44,4 +108,14 @@ abstract class AiService {
   Future<String> proofreadText(String text);
 
   Future<String> rewriteText(String text, RewriteTone tone);
+
+  // ---- Idea Lab ----
+
+  Future<AiIdea> generateIdea(IdeaBrief brief);
+
+  Future<AiIdea> improveIdea(AiIdea current, {String guidance});
+
+  Future<String> projectPlanFor(AiIdea idea);
+
+  Future<String> cvPitchFor(AiIdea idea);
 }

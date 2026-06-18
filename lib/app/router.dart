@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../data/providers.dart';
 import '../features/auth/auth_providers.dart';
 import '../features/home/home_screen.dart';
+import '../features/idea_lab/idea_detail_screen.dart';
+import '../features/idea_lab/idea_form_screen.dart';
 import '../features/idea_lab/idea_lab_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/onboarding/create_profile_screen.dart';
@@ -121,6 +123,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/workspace/:id',
         builder: (context, state) =>
             StudyWorkspaceScreen(documentId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/idea-lab/new',
+        builder: (context, state) => const IdeaFormScreen(),
+      ),
+      GoRoute(
+        path: '/idea/:id',
+        builder: (context, state) =>
+            IdeaDetailScreen(ideaId: state.pathParameters['id']!),
       ),
     ],
   );

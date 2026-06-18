@@ -20,6 +20,7 @@ class Idea {
     required this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.whyUnique,
   });
 
   @HiveField(0)
@@ -46,4 +47,38 @@ class Idea {
   final DateTime createdAt;
   @HiveField(11)
   final DateTime updatedAt;
+
+  /// Why the idea stands out (Phase 6). Nullable so ideas saved before this
+  /// field existed still load.
+  @HiveField(12)
+  final String? whyUnique;
+
+  Idea copyWith({
+    String? title,
+    String? problem,
+    List<String>? targetUsers,
+    List<String>? features,
+    List<String>? techStack,
+    Difficulty? difficulty,
+    String? mvpPlan,
+    String? notes,
+    DateTime? updatedAt,
+    String? whyUnique,
+  }) {
+    return Idea(
+      id: id,
+      userId: userId,
+      title: title ?? this.title,
+      problem: problem ?? this.problem,
+      targetUsers: targetUsers ?? this.targetUsers,
+      features: features ?? this.features,
+      techStack: techStack ?? this.techStack,
+      difficulty: difficulty ?? this.difficulty,
+      mvpPlan: mvpPlan ?? this.mvpPlan,
+      notes: notes ?? this.notes,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      whyUnique: whyUnique ?? this.whyUnique,
+    );
+  }
 }
