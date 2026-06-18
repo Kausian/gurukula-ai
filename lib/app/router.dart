@@ -16,6 +16,7 @@ import '../features/onboarding/welcome_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shell/main_shell.dart';
 import '../features/study/paste_text_screen.dart';
+import '../features/study/quiz_screen.dart';
 import '../features/study/study_workspace_screen.dart';
 import '../features/upload/upload_screen.dart';
 
@@ -132,6 +133,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/idea/:id',
         builder: (context, state) =>
             IdeaDetailScreen(ideaId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/quiz/:id',
+        builder: (context, state) =>
+            QuizScreen(quizId: state.pathParameters['id']!),
       ),
     ],
   );

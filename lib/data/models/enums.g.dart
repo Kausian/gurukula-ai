@@ -150,6 +150,8 @@ class ActivityTypeAdapter extends TypeAdapter<ActivityType> {
         return ActivityType.ideaSaved;
       case 4:
         return ActivityType.rewriteCreated;
+      case 5:
+        return ActivityType.quizCompleted;
       default:
         return ActivityType.documentUploaded;
     }
@@ -168,6 +170,8 @@ class ActivityTypeAdapter extends TypeAdapter<ActivityType> {
         writer.writeByte(3);
       case ActivityType.rewriteCreated:
         writer.writeByte(4);
+      case ActivityType.quizCompleted:
+        writer.writeByte(5);
     }
   }
 
@@ -178,6 +182,47 @@ class ActivityTypeAdapter extends TypeAdapter<ActivityType> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ActivityTypeAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class QuestionTypeAdapter extends TypeAdapter<QuestionType> {
+  @override
+  final typeId = 14;
+
+  @override
+  QuestionType read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return QuestionType.multipleChoice;
+      case 1:
+        return QuestionType.trueFalse;
+      case 2:
+        return QuestionType.shortAnswer;
+      default:
+        return QuestionType.multipleChoice;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, QuestionType obj) {
+    switch (obj) {
+      case QuestionType.multipleChoice:
+        writer.writeByte(0);
+      case QuestionType.trueFalse:
+        writer.writeByte(1);
+      case QuestionType.shortAnswer:
+        writer.writeByte(2);
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is QuestionTypeAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

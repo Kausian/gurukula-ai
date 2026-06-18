@@ -4,6 +4,8 @@ import '../../hive_registrar.g.dart';
 import '../models/activity_event.dart';
 import '../models/flashcard.dart';
 import '../models/idea.dart';
+import '../models/quiz.dart';
+import '../models/quiz_result.dart';
 import '../models/rewrite.dart';
 import '../models/study_document.dart';
 import '../models/summary.dart';
@@ -27,6 +29,8 @@ Future<void> initHive() async {
     Hive.openBox<Flashcard>(HiveBoxes.flashcards),
     Hive.openBox<Rewrite>(HiveBoxes.rewrites),
     Hive.openBox<Idea>(HiveBoxes.ideas),
+    Hive.openBox<Quiz>(HiveBoxes.quizzes),
+    Hive.openBox<QuizResult>(HiveBoxes.quizResults),
     Hive.openBox<ActivityEvent>(HiveBoxes.activity),
     Hive.openBox<dynamic>(HiveBoxes.settings),
   ]);

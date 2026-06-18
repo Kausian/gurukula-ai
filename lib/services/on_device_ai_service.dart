@@ -83,6 +83,10 @@ class OnDeviceAiService implements AiService {
     }
   }
 
+  @override
+  Future<List<AiQuizQuestion>> generateQuiz(String text, {int count = 5}) =>
+      fallback.generateQuiz(text, count: count);
+
   // Idea Lab has no on-device model API, so these use the fallback directly.
 
   @override

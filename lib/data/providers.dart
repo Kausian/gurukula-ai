@@ -8,6 +8,8 @@ import 'local/hive_boxes.dart';
 import 'models/activity_event.dart';
 import 'models/flashcard.dart';
 import 'models/idea.dart';
+import 'models/quiz.dart';
+import 'models/quiz_result.dart';
 import 'models/rewrite.dart';
 import 'models/study_document.dart';
 import 'models/summary.dart';
@@ -17,6 +19,8 @@ import 'repositories/document_repository.dart';
 import 'repositories/flashcard_repository.dart';
 import 'repositories/idea_repository.dart';
 import 'repositories/profile_repository.dart';
+import 'repositories/quiz_repository.dart';
+import 'repositories/quiz_result_repository.dart';
 import 'repositories/rewrite_repository.dart';
 import 'repositories/summary_repository.dart';
 
@@ -48,6 +52,14 @@ final ideaRepositoryProvider = Provider<IdeaRepository>(
   (ref) => IdeaRepository(Hive.box<Idea>(HiveBoxes.ideas)),
 );
 
+final quizRepositoryProvider = Provider<QuizRepository>(
+  (ref) => QuizRepository(Hive.box<Quiz>(HiveBoxes.quizzes)),
+);
+
+final quizResultRepositoryProvider = Provider<QuizResultRepository>(
+  (ref) => QuizResultRepository(Hive.box<QuizResult>(HiveBoxes.quizResults)),
+);
+
 final activityRepositoryProvider = Provider<ActivityRepository>(
   (ref) => ActivityRepository(Hive.box<ActivityEvent>(HiveBoxes.activity)),
 );
@@ -65,6 +77,8 @@ final dataChangesProvider = StreamProvider<int>((ref) {
     ref.watch(flashcardRepositoryProvider).box,
     ref.watch(rewriteRepositoryProvider).box,
     ref.watch(ideaRepositoryProvider).box,
+    ref.watch(quizRepositoryProvider).box,
+    ref.watch(quizResultRepositoryProvider).box,
     ref.watch(activityRepositoryProvider).box,
   ];
   final controller = StreamController<int>();
@@ -98,12 +112,14 @@ class DashboardStats {
     required this.notes,
     required this.flashcards,
     required this.ideas,
+    required this.quizzes,
     required this.sessions,
   });
 
   final int notes;
   final int flashcards;
   final int ideas;
+  final int quizzes;
   final int sessions;
 }
 
@@ -113,6 +129,7 @@ final dashboardStatsProvider = Provider<DashboardStats>((ref) {
     notes: ref.watch(documentRepositoryProvider).getAll().length,
     flashcards: ref.watch(flashcardRepositoryProvider).getAll().length,
     ideas: ref.watch(ideaRepositoryProvider).getAll().length,
+    quizzes: ref.watch(quizResultRepositoryProvider).getAll().length,
     sessions: ref.watch(activityRepositoryProvider).getAll().length,
   );
 });
@@ -127,7 +144,7 @@ final recentActivityProvider = Provider<List<ActivityEvent>>((ref) {
 // Library view model: a single list across all saved content types.
 // ---------------------------------------------------------------------------
 
-enum LibraryCategory { notes, summaries, flashcards, ideas }
+enum LibraryCategory { notes, summaries, flashcards, ideas, quizzes }
 
 class LibraryItem {
   const LibraryItem({
@@ -153,6 +170,7 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
   final summaries = ref.watch(summaryRepositoryProvider).getAll();
   final flashcards = ref.watch(flashcardRepositoryProvider).getAll();
   final ideas = ref.watch(ideaRepositoryProvider).getAll();
+  final quizzes = ref.watch(quizRepositoryProvider).getAll();
   final docRepo = ref.watch(documentRepositoryProvider);
 
   final items = <LibraryItem>[
@@ -183,6 +201,13 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
         title: i.title,
         category: LibraryCategory.ideas,
         createdAt: i.createdAt,
+      ),
+    for (final q in quizzes)
+      LibraryItem(
+        id: q.id,
+        title: q.title,
+        category: LibraryCategory.quizzes,
+        createdAt: q.createdAt,
       ),
   ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 

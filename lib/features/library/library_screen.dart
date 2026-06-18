@@ -21,6 +21,7 @@ class LibraryScreen extends ConsumerWidget {
     'Summaries',
     'Flashcards',
     'Ideas',
+    'Quizzes',
   ];
 
   void _comingSoon(BuildContext context) {
@@ -150,6 +151,8 @@ class _LibraryTile extends StatelessWidget {
       case LibraryCategory.ideas:
         return _TileStyle(
             Icons.lightbulb_rounded, AppAccents.coral.fill, 'Idea');
+      case LibraryCategory.quizzes:
+        return _TileStyle(Icons.quiz_rounded, AppAccents.sky.fill, 'Quiz');
     }
   }
 }

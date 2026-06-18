@@ -98,6 +98,87 @@ class MockAiService implements AiService {
   }
 
   @override
+  Future<List<AiQuizQuestion>> generateQuiz(String text, {int count = 5}) async {
+    await Future<void>.delayed(_delay);
+    final sentences = splitSentences(text);
+    if (sentences.isEmpty) return const [];
+
+    // Pool of candidate key words from across the notes.
+    final pool = <String>{};
+    for (final s in sentences) {
+      pool.addAll(_contentWords(s));
+    }
+    final distractorPool = pool.toList();
+    final questions = <AiQuizQuestion>[];
+
+    // Cloze (fill-in-the-blank) multiple-choice questions.
+    for (var i = 0;
+        i < sentences.length && questions.length < count - 2;
+        i++) {
+      final words = _contentWords(sentences[i])
+        ..sort((a, b) => b.length.compareTo(a.length));
+      if (words.isEmpty) continue;
+      final answer = words.first;
+      final distractors = distractorPool
+          .where((w) => w.toLowerCase() != answer.toLowerCase())
+          .toList();
+      if (distractors.length < 3) continue;
+
+      final options = <String>{answer};
+      var d = i;
+      while (options.length < 4 && d < i + distractors.length) {
+        options.add(distractors[d % distractors.length]);
+        d++;
+      }
+      questions.add(
+        AiQuizQuestion(
+          type: QuestionType.multipleChoice,
+          prompt: 'Fill in the blank: ${sentences[i].replaceFirst(answer, '_____')}',
+          options: options.toList()..sort(),
+          correctAnswer: answer,
+          explanation: 'From your notes: "${sentences[i]}"',
+        ),
+      );
+    }
+
+    // One true/false question.
+    if (questions.length < count) {
+      questions.add(
+        AiQuizQuestion(
+          type: QuestionType.trueFalse,
+          prompt: sentences.first,
+          options: const ['True', 'False'],
+          correctAnswer: 'True',
+          explanation: 'This statement comes directly from your notes.',
+        ),
+      );
+    }
+
+    // One short-answer question.
+    if (questions.length < count && sentences.length > 1) {
+      final s = sentences[sentences.length > 2 ? 2 : 1];
+      questions.add(
+        AiQuizQuestion(
+          type: QuestionType.shortAnswer,
+          prompt: 'In your own words, explain: ${firstWords(s, 6)}',
+          options: const [],
+          correctAnswer: s,
+        ),
+      );
+    }
+
+    return questions.take(count).toList();
+  }
+
+  List<String> _contentWords(String sentence) {
+    return sentence
+        .replaceAll(RegExp(r'[^A-Za-z ]'), '')
+        .split(' ')
+        .where((w) => w.length > 4)
+        .toList();
+  }
+
+  @override
   Future<AiIdea> generateIdea(IdeaBrief brief) async {
     await Future<void>.delayed(_delay);
     final subject =

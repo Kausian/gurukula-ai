@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'study_providers.dart';
 import 'widgets/flashcards_tab.dart';
+import 'widgets/quiz_tab.dart';
 import 'widgets/summary_tab.dart';
 import 'widgets/tools_tab.dart';
 
@@ -26,7 +27,7 @@ class StudyWorkspaceScreen extends ConsumerWidget {
     }
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(document.title, overflow: TextOverflow.ellipsis),
@@ -49,10 +50,13 @@ class StudyWorkspaceScreen extends ConsumerWidget {
             ),
           ],
           bottom: const TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: 'Summary'),
               Tab(text: 'Tools'),
               Tab(text: 'Flashcards'),
+              Tab(text: 'Quiz'),
             ],
           ),
         ),
@@ -61,6 +65,7 @@ class StudyWorkspaceScreen extends ConsumerWidget {
             SummaryTab(documentId: documentId),
             ToolsTab(documentId: documentId),
             FlashcardsTab(documentId: documentId),
+            QuizTab(documentId: documentId),
           ],
         ),
       ),

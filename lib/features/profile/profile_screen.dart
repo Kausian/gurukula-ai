@@ -134,6 +134,21 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            AppCard(
+              child: Row(
+                children: [
+                  IconChip(icon: Icons.quiz_rounded, color: AppAccents.sky.fill),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text('Quizzes taken',
+                        style: theme.textTheme.titleSmall),
+                  ),
+                  Text('${stats.quizzes}',
+                      style: theme.textTheme.headlineSmall),
+                ],
+              ),
+            ),
             const SizedBox(height: 28),
 
             // AI status.

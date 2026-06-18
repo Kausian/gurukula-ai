@@ -29,6 +29,23 @@ class AiFlashcardDraft {
   final Difficulty difficulty;
 }
 
+/// A quiz question produced by an [AiService] (before it is saved to Hive).
+class AiQuizQuestion {
+  const AiQuizQuestion({
+    required this.type,
+    required this.prompt,
+    required this.options,
+    required this.correctAnswer,
+    this.explanation,
+  });
+
+  final QuestionType type;
+  final String prompt;
+  final List<String> options;
+  final String correctAnswer;
+  final String? explanation;
+}
+
 /// The inputs a student gives the Idea Lab to generate a new project idea.
 class IdeaBrief {
   const IdeaBrief({
@@ -108,6 +125,8 @@ abstract class AiService {
   Future<String> proofreadText(String text);
 
   Future<String> rewriteText(String text, RewriteTone tone);
+
+  Future<List<AiQuizQuestion>> generateQuiz(String text, {int count});
 
   // ---- Idea Lab ----
 

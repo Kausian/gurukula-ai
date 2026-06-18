@@ -246,6 +246,9 @@ class _ActivityRow extends StatelessWidget {
       case ActivityType.rewriteCreated:
         return _ActivityStyle(
             Icons.edit_rounded, AppAccents.sky.fill, 'Text rewritten');
+      case ActivityType.quizCompleted:
+        return _ActivityStyle(
+            Icons.quiz_rounded, AppAccents.lavender.fill, 'Quiz completed');
     }
   }
 }

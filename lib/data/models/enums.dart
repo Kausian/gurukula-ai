@@ -50,4 +50,17 @@ enum ActivityType {
   ideaSaved,
   @HiveField(4)
   rewriteCreated,
+  @HiveField(5)
+  quizCompleted,
+}
+
+/// The kind of a quiz question.
+@HiveType(typeId: 14)
+enum QuestionType {
+  @HiveField(0)
+  multipleChoice,
+  @HiveField(1)
+  trueFalse,
+  @HiveField(2)
+  shortAnswer,
 }
