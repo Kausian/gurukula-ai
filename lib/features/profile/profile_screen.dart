@@ -12,6 +12,7 @@ import '../../core/widgets/status_badge.dart';
 import '../../data/providers.dart';
 import '../../services/ai_service.dart';
 import '../auth/auth_providers.dart';
+import '../settings/settings_providers.dart';
 import '../study/study_providers.dart';
 
 /// Profile: student card, study stats, AI status, settings and about.
@@ -35,6 +36,7 @@ class ProfileScreen extends ConsumerWidget {
     final stats = ref.watch(dashboardStatsProvider);
     final user = ref.watch(currentUserProvider);
     final aiMode = ref.watch(aiModeProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     final name = profile?.username ?? user?.displayName ?? 'Guest student';
     final subtitle = profile == null
@@ -187,8 +189,8 @@ class ProfileScreen extends ConsumerWidget {
                   _SettingRow(
                       icon: Icons.brightness_6_rounded,
                       label: 'Theme',
-                      value: 'System',
-                      onTap: () => _comingSoon(context)),
+                      value: _themeLabel(themeMode),
+                      onTap: () => _pickTheme(context, ref)),
                   const Divider(height: 1),
                   _SettingRow(
                       icon: Icons.translate_rounded,
@@ -205,7 +207,7 @@ class ProfileScreen extends ConsumerWidget {
                   _SettingRow(
                       icon: Icons.lock_outline_rounded,
                       label: 'Privacy',
-                      onTap: () => _comingSoon(context)),
+                      onTap: () => _showPrivacy(context)),
                 ],
               ),
             ),
@@ -229,6 +231,22 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
+            // Delete local data.
+            AppCard(
+              onTap: () => _confirmDelete(context, ref),
+              child: Row(
+                children: [
+                  Icon(Icons.delete_outline_rounded,
+                      size: 22, color: scheme.error),
+                  const SizedBox(width: 14),
+                  Text('Delete local data',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(color: scheme.error)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
             // Sign out.
             AppCard(
               onTap: () => _signOut(context, ref),
@@ -246,6 +264,103 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _themeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+    }
+  }
+
+  Future<void> _pickTheme(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(themeModeProvider);
+    final selected = await showDialog<ThemeMode>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Theme'),
+        children: [
+          for (final mode in ThemeMode.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, mode),
+              child: Row(
+                children: [
+                  Icon(
+                    mode == current
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 20,
+                    color: mode == current
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 14),
+                  Text(_themeLabel(mode)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (selected != null) {
+      await ref.read(themeModeProvider.notifier).set(selected);
+    }
+  }
+
+  void _showPrivacy(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Your privacy'),
+        content: const Text(
+          'All your study data is stored only on this device, using local '
+          'storage. Nothing is uploaded to a server. Google Sign-In is used '
+          'for identity only.',
+        ),
+        actions: [
+          FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Got it')),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete local data?'),
+        content: const Text(
+          'This permanently removes all notes, summaries, flashcards, ideas '
+          'and quizzes from this device. Your profile stays. This cannot be '
+          'undone.',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await deleteLocalStudyData(ref);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Local study data deleted')),
+        );
+      }
+    }
   }
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {

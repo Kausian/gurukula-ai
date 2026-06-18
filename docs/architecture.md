@@ -87,14 +87,16 @@ All study data is stored locally in Hive (no cloud database). Boxes are opened
 at startup in `data/local/hive_init.dart` before `runApp`, so repositories read
 them synchronously.
 
-Seven models with fixed Hive `typeId`s (never renumber once data exists):
+Models with fixed Hive `typeId`s (never renumber once data exists):
 
 | typeId | Model | typeId | Model |
 |---|---|---|---|
-| 0 | `UserProfile` | 4 | `Rewrite` |
-| 1 | `StudyDocument` | 5 | `Idea` |
-| 2 | `Summary` | 6 | `ActivityEvent` |
-| 3 | `Flashcard` | 7–10 | enums (DocumentType, RewriteTone, Difficulty, ActivityType) |
+| 0 | `UserProfile` | 6 | `ActivityEvent` |
+| 1 | `StudyDocument` | 11 | `Quiz` |
+| 2 | `Summary` | 12 | `QuizQuestion` |
+| 3 | `Flashcard` | 13 | `QuizResult` |
+| 4 | `Rewrite` | 7–10, 14 | enums (DocumentType, RewriteTone, Difficulty, ActivityType, QuestionType) |
+| 5 | `Idea` | | |
 
 - **Repositories** wrap each box with CRUD plus domain queries
   (`byDocument`, `recent`, `byGoogleUid`, ...). A generic `HiveRepository<T>`
@@ -141,10 +143,17 @@ abstract class AiService {
   Future<List<AiFlashcardDraft>> generateFlashcards(String text, {int count});
   Future<String> proofreadText(String text);
   Future<String> rewriteText(String text, RewriteTone tone);
+  Future<List<AiQuizQuestion>> generateQuiz(String text, {int count});
+  // Idea Lab
+  Future<AiIdea> generateIdea(IdeaBrief brief);
+  Future<AiIdea> improveIdea(AiIdea current, {String guidance});
+  Future<String> projectPlanFor(AiIdea idea);
+  Future<String> cvPitchFor(AiIdea idea);
 }
 ```
 
-`StudyController` only ever talks to `AiService`, so swapping implementations
+`StudyController`, `QuizController` and `IdeaController` only ever talk to
+`AiService`, so swapping implementations
 changes nothing upstream. The implementation is chosen in `study_providers.dart`:
 
 ```dart
@@ -171,7 +180,8 @@ is **defensive per feature**: any missing plugin, unavailable model, or error
 transparently falls back to the mock for that call.
 
 - `summarizeText` / `proofreadText` / `rewriteText` → try native, else mock.
-- `generateFlashcards` → always mock (ML Kit GenAI has no flashcard API).
+- `generateFlashcards` / `generateQuiz` / idea methods → always mock (ML Kit
+  GenAI covers summarize/rewrite/proofread only, not Q&A or idea generation).
 - `checkAvailability` → maps the native status string to `AiAvailability`; the
   Profile "AI and offline status" card shows it live.
 
