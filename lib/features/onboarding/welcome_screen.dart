@@ -47,6 +47,35 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
   }
 
+  /// Lays out two feature cards side by side. [IntrinsicHeight] makes both
+  /// cards match the taller one's content height, so neither is clipped.
+  Widget _featureRow(_Feature left, _Feature right) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: ColorfulFeatureCard(
+              accent: left.accent,
+              icon: left.icon,
+              title: left.title,
+              subtitle: left.subtitle,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: ColorfulFeatureCard(
+              accent: right.accent,
+              icon: right.icon,
+              title: right.title,
+              subtitle: right.subtitle,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -83,23 +112,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 28),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 14,
-                crossAxisSpacing: 14,
-                childAspectRatio: 1.08,
-                children: [
-                  for (final f in _features)
-                    ColorfulFeatureCard(
-                      accent: f.accent,
-                      icon: f.icon,
-                      title: f.title,
-                      subtitle: f.subtitle,
-                    ),
-                ],
-              ),
+              // Two intrinsic-height rows instead of a fixed-aspect GridView so
+              // each card grows to fit its content (and larger font scales)
+              // without a RenderFlex overflow.
+              _featureRow(_features[0], _features[1]),
+              const SizedBox(height: 14),
+              _featureRow(_features[2], _features[3]),
               const SizedBox(height: 28),
               FilledButton.icon(
                 onPressed: _busy ? null : _signIn,

@@ -44,12 +44,16 @@ class ColorfulFeatureCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontSize: 16.5, fontWeight: FontWeight.w800, color: ink),
           ),
           const SizedBox(height: 3),
           Text(
             subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w500,
