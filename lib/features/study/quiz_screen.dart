@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../core/utils/share_format.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/share_actions.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/quiz.dart';
 import '../../data/models/quiz_question.dart';
 import '../../data/models/quiz_result.dart';
 import 'quiz_providers.dart';
+import 'study_providers.dart';
 
 /// Takes a quiz one question at a time, then shows the score and a review.
 class QuizScreen extends ConsumerStatefulWidget {
@@ -226,9 +229,24 @@ class _ResultView extends ConsumerWidget {
     final theme = Theme.of(context);
     final controller = ref.read(quizControllerProvider);
     final pct = result.total == 0 ? 0 : (result.score / result.total * 100).round();
+    final docTitle =
+        ref.watch(documentProvider(result.documentId))?.title ?? 'Note';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your score')),
+      appBar: AppBar(
+        title: const Text('Your score'),
+        actions: [
+          ShareActions(
+            label: 'Quiz result',
+            buildText: () => ShareFormat.quizResult(
+              docTitle,
+              quiz,
+              result,
+              isCorrect: controller.isCorrect,
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),

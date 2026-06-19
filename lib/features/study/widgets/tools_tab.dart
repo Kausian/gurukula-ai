@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/share_actions.dart';
 import '../../../data/models/enums.dart';
 import '../study_providers.dart';
 
@@ -103,17 +104,10 @@ class _ToolsTabState extends ConsumerState<ToolsTab> {
         else if (_result != null) ...[
           SectionHeader(
             title: 'Result',
-            trailing: IconButton(
-              icon: const Icon(Icons.copy_rounded, size: 20),
-              tooltip: 'Copy',
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: _result!));
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied')),
-                  );
-                }
-              },
+            trailing: ShareActions(
+              label: 'Rewrite',
+              buildText: () =>
+                  ShareFormat.rewrite(_resultLabel ?? 'Result', _result ?? ''),
             ),
           ),
           AppCard(

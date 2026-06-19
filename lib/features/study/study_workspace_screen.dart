@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'study_providers.dart';
@@ -31,24 +30,6 @@ class StudyWorkspaceScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(document.title, overflow: TextOverflow.ellipsis),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.copy_rounded),
-              tooltip: 'Copy summary',
-              onPressed: () async {
-                final summary =
-                    ref.read(summaryForDocumentProvider(documentId));
-                if (summary == null) return;
-                await Clipboard.setData(
-                    ClipboardData(text: summary.shortSummary));
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Summary copied')),
-                  );
-                }
-              },
-            ),
-          ],
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,

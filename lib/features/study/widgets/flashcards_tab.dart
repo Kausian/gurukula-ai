@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/share_actions.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../data/models/enums.dart';
 import '../../../data/models/flashcard.dart';
@@ -66,6 +68,13 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
             Expanded(
               child: Text('${cards.length} cards',
                   style: Theme.of(context).textTheme.titleMedium),
+            ),
+            ShareActions(
+              label: 'Flashcards',
+              buildText: () => ShareFormat.flashcards(
+                ref.read(documentProvider(widget.documentId))?.title ?? 'Note',
+                cards,
+              ),
             ),
             TextButton.icon(
               onPressed: _busy ? null : _generate,

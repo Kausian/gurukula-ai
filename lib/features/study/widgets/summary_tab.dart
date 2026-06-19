@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/share_actions.dart';
 import '../study_providers.dart';
 
 /// Summary tab: short summary, detailed summary and key points.
@@ -25,9 +27,18 @@ class SummaryTab extends ConsumerWidget {
       );
     }
 
+    final docTitle = ref.watch(documentProvider(documentId))?.title ?? 'Note';
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: ShareActions(
+            label: 'Summary',
+            buildText: () => ShareFormat.summary(docTitle, summary),
+          ),
+        ),
         const SectionHeader(title: 'Short summary'),
         AppCard(
           child: Text(summary.shortSummary, style: theme.textTheme.bodyLarge),

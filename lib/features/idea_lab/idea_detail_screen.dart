@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/utils/share_format.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/share_actions.dart';
 import '../../data/models/idea.dart';
 import '../../services/ai_service.dart';
 import 'idea_providers.dart';
@@ -85,7 +87,15 @@ class _IdeaDetailScreenState extends ConsumerState<IdeaDetailScreen> {
     final busy = _busyAction != null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(idea.title, overflow: TextOverflow.ellipsis)),
+      appBar: AppBar(
+        title: Text(idea.title, overflow: TextOverflow.ellipsis),
+        actions: [
+          ShareActions(
+            label: 'Idea',
+            buildText: () => ShareFormat.idea(idea),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
