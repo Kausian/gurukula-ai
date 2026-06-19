@@ -17,18 +17,37 @@ import '../study/import_preview_screen.dart';
 class UploadScreen extends StatelessWidget {
   const UploadScreen({super.key});
 
-  /// Picks a local `.txt` file, extracts its text on-device, and opens the
-  /// import preview. Cancellation is silent; failures show a SnackBar.
-  Future<void> _importTextFile(BuildContext context) async {
+  /// Picks a local `.txt` file, reads it on-device, and opens the preview.
+  Future<void> _importTextFile(BuildContext context) => _runImport(
+        context,
+        const FileImportService().pickTextFile(),
+        DocumentType.text,
+      );
+
+  /// Picks a local `.pdf` file, extracts its text on-device, and opens the
+  /// preview.
+  Future<void> _importPdfFile(BuildContext context) => _runImport(
+        context,
+        const FileImportService().pickPdfFile(),
+        DocumentType.pdf,
+      );
+
+  /// Shared import handler: await the [picker], open the preview on success,
+  /// stay silent on cancel, and surface friendly errors as a SnackBar.
+  Future<void> _runImport(
+    BuildContext context,
+    Future<ImportedFile?> picker,
+    DocumentType type,
+  ) async {
     try {
-      final imported = await const FileImportService().pickTextFile();
+      final imported = await picker;
       if (imported == null || !context.mounted) return; // cancelled
       context.push(
         '/import-preview',
         extra: ImportPreviewArgs(
           text: imported.text,
           fileName: imported.fileName,
-          type: DocumentType.text,
+          type: type,
         ),
       );
     } on FileImportException catch (e) {
@@ -74,9 +93,9 @@ class UploadScreen extends StatelessWidget {
               accent: AppAccents.lime.fill,
               icon: Icons.picture_as_pdf_rounded,
               title: 'Upload PDF',
-              subtitle: 'Import a lecture PDF and extract its text.',
-              badge:
-                  const StatusBadge(label: 'Coming soon', tone: BadgeTone.neutral),
+              subtitle: 'Import a text-based PDF and extract its text.',
+              badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
+              onTap: () => _importPdfFile(context),
             ),
             const SizedBox(height: 12),
             _OptionCard(
