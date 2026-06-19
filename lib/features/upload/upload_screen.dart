@@ -6,6 +6,9 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/icon_chip.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../data/models/enums.dart';
+import '../../services/file_import_service.dart';
+import '../study/import_preview_screen.dart';
 
 /// Upload landing screen: interactive input-method cards.
 ///
@@ -13,6 +16,34 @@ import '../../core/widgets/status_badge.dart';
 /// shows its readiness state.
 class UploadScreen extends StatelessWidget {
   const UploadScreen({super.key});
+
+  /// Picks a local `.txt` file, extracts its text on-device, and opens the
+  /// import preview. Cancellation is silent; failures show a SnackBar.
+  Future<void> _importTextFile(BuildContext context) async {
+    try {
+      final imported = await const FileImportService().pickTextFile();
+      if (imported == null || !context.mounted) return; // cancelled
+      context.push(
+        '/import-preview',
+        extra: ImportPreviewArgs(
+          text: imported.text,
+          fileName: imported.fileName,
+          type: DocumentType.text,
+        ),
+      );
+    } on FileImportException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Couldn't import this file.")),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +91,9 @@ class UploadScreen extends StatelessWidget {
               accent: AppAccents.mint.fill,
               icon: Icons.folder_open_rounded,
               title: 'Import from files',
-              subtitle: 'Bring in a saved document.',
-              badge: const StatusBadge(label: 'Later', tone: BadgeTone.neutral),
+              subtitle: 'Bring in a saved .txt document.',
+              badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
+              onTap: () => _importTextFile(context),
             ),
             const SizedBox(height: 22),
 

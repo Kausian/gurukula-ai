@@ -15,6 +15,7 @@ import '../features/onboarding/splash_screen.dart';
 import '../features/onboarding/welcome_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shell/main_shell.dart';
+import '../features/study/import_preview_screen.dart';
 import '../features/study/paste_text_screen.dart';
 import '../features/study/quiz_screen.dart';
 import '../features/study/study_workspace_screen.dart';
@@ -119,6 +120,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/paste',
         builder: (context, state) => const PasteTextScreen(),
+      ),
+      GoRoute(
+        path: '/import-preview',
+        builder: (context, state) =>
+            ImportPreviewScreen(args: state.extra as ImportPreviewArgs),
       ),
       GoRoute(
         path: '/workspace/:id',

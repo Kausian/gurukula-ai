@@ -97,6 +97,33 @@ class StudyController {
   Future<String> createDocumentFromText({
     required String title,
     required String text,
+  }) {
+    return _createDocument(title: title, text: text, type: DocumentType.text);
+  }
+
+  /// Creates a document from an imported file (Phase 9). Behaves exactly like
+  /// the paste flow, but records the source [type] and [sourceFileName].
+  Future<String> createDocumentFromImport({
+    required String title,
+    required String text,
+    required DocumentType type,
+    String? sourceFileName,
+  }) {
+    return _createDocument(
+      title: title,
+      text: text,
+      type: type,
+      sourceFileName: sourceFileName,
+    );
+  }
+
+  /// Shared pipeline for both paste and import: persist the document, log it,
+  /// then auto-generate and save its summary. Returns the new document id.
+  Future<String> _createDocument({
+    required String title,
+    required String text,
+    required DocumentType type,
+    String? sourceFileName,
   }) async {
     final cleaned = cleanText(text);
     final now = DateTime.now().toUtc();
@@ -108,9 +135,10 @@ class StudyController {
       id: docId,
       userId: _userId,
       title: resolvedTitle,
-      type: DocumentType.text,
+      type: type,
       rawText: text,
       cleanedText: cleaned,
+      sourceFileName: sourceFileName,
       createdAt: now,
       updatedAt: now,
     );

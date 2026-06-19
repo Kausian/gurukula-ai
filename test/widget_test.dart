@@ -19,8 +19,11 @@ import 'package:gurukula_ai/data/models/idea.dart';
 import 'package:gurukula_ai/data/models/rewrite.dart';
 import 'package:gurukula_ai/data/models/study_document.dart';
 import 'package:gurukula_ai/data/models/summary.dart';
+import 'package:gurukula_ai/data/models/enums.dart';
 import 'package:gurukula_ai/data/models/user_profile.dart';
+import 'package:gurukula_ai/data/providers.dart';
 import 'package:gurukula_ai/features/auth/auth_providers.dart';
+import 'package:gurukula_ai/features/study/study_providers.dart';
 import 'package:gurukula_ai/hive_registrar.g.dart';
 
 void main() {
@@ -61,5 +64,30 @@ void main() {
 
     expect(find.text('Study smarter, even offline.'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
+  });
+
+  test('createDocumentFromImport saves a document with file metadata', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final id = await container
+        .read(studyControllerProvider)
+        .createDocumentFromImport(
+          title: 'Imported notes',
+          text: 'Photosynthesis converts light into chemical energy.',
+          type: DocumentType.text,
+          sourceFileName: 'biology.txt',
+        );
+
+    final doc = container.read(documentRepositoryProvider).getById(id);
+    expect(doc, isNotNull);
+    expect(doc!.title, 'Imported notes');
+    expect(doc.type, DocumentType.text);
+    expect(doc.sourceFileName, 'biology.txt');
+    expect(doc.cleanedText, isNotEmpty);
+
+    // The shared pipeline auto-generates a summary just like the paste flow.
+    final summaries = container.read(summaryRepositoryProvider).byDocument(id);
+    expect(summaries, isNotEmpty);
   });
 }
