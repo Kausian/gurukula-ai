@@ -16,6 +16,22 @@ study data **local on the device**.
   <img src="docs/screenshots/04_quiz.png" width="220" alt="Quiz score">
 </p>
 
+## 📲 Download & Install
+
+Gurukula AI is available as an Android APK for early testing.
+
+1. Go to the [GitHub Releases](../../releases) page.
+
+2. Download the latest APK:
+
+   `gurukula-ai-v1.0.0.apk`
+
+3. Open the APK on your Android device.
+
+4. Allow **Install unknown apps** if prompted.
+
+5. Follow the installer instructions.
+
 ## The problem
 
 Many students can't fully use AI study tools because they depend on stable
