@@ -180,12 +180,18 @@ enum LibraryCategory { notes, summaries, flashcards, ideas, quizzes, rewrites }
 /// How the Library list is ordered (Phase 12A).
 enum LibrarySort { newest, oldest }
 
+/// Where a library item ultimately came from (Phase 12B). Items with no parent
+/// document (ideas) have a null source and only show under the "All" filter.
+enum LibrarySource { pasted, txt, pdf }
+
 class LibraryItem {
   const LibraryItem({
     required this.id,
     required this.title,
     required this.category,
     required this.createdAt,
+    this.documentId,
+    this.source,
     this.sourceFileName,
     this.searchText = '',
   });
@@ -195,12 +201,29 @@ class LibraryItem {
   final LibraryCategory category;
   final DateTime createdAt;
 
+  /// Parent study document (Phase 12B): a note is its own document; summaries,
+  /// flashcards, quizzes and rewrites point at the note they came from. Null
+  /// for ideas (and orphaned items whose document was deleted).
+  final String? documentId;
+
+  /// How this item's parent document entered the app (Phase 12B). Null when
+  /// there is no parent document.
+  final LibrarySource? source;
+
   /// Original imported file name, when the item came from a file (Phase 9).
   final String? sourceFileName;
 
   /// Lowercased, bounded index of title + file name + a content preview, used
   /// by Library search (Phase 12A).
   final String searchText;
+}
+
+/// Derives a [LibrarySource] from the parent document: PDF type → pdf, text
+/// type with a file name → txt import, text type without one → pasted.
+LibrarySource _sourceOf(StudyDocument doc) {
+  if (doc.type == DocumentType.pdf) return LibrarySource.pdf;
+  if ((doc.sourceFileName ?? '').isNotEmpty) return LibrarySource.txt;
+  return LibrarySource.pasted;
 }
 
 /// Selected type-filter chip index on the Library screen (0 = All).
@@ -211,6 +234,9 @@ final librarySearchProvider = StateProvider<String>((ref) => '');
 
 /// Current Library sort order (Phase 12A).
 final librarySortProvider = StateProvider<LibrarySort>((ref) => LibrarySort.newest);
+
+/// Current Library source filter (Phase 12B). Null = All sources.
+final librarySourceProvider = StateProvider<LibrarySource?>((ref) => null);
 
 /// Builds the search index for an item: title + file name + a bounded preview
 /// so search stays fast even for large imported documents.
@@ -251,6 +277,8 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
         title: d.title,
         category: LibraryCategory.notes,
         createdAt: d.createdAt,
+        documentId: d.id,
+        source: _sourceOf(d),
         sourceFileName: d.sourceFileName,
         searchText: _librarySearchText(d.title, d.sourceFileName, d.cleanedText),
       ),
@@ -263,6 +291,8 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
           title: title,
           category: LibraryCategory.summaries,
           createdAt: s.createdAt,
+          documentId: s.documentId,
+          source: doc == null ? null : _sourceOf(doc),
           sourceFileName: doc?.sourceFileName,
           searchText: _librarySearchText(title, doc?.sourceFileName,
               '${s.shortSummary} ${s.keyPoints.join(' ')}'),
@@ -276,6 +306,8 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
           title: f.question,
           category: LibraryCategory.flashcards,
           createdAt: f.createdAt,
+          documentId: f.documentId,
+          source: doc == null ? null : _sourceOf(doc),
           sourceFileName: doc?.sourceFileName,
           searchText: _librarySearchText(
               f.question, doc?.sourceFileName, f.answer),
@@ -298,6 +330,8 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
           title: q.title,
           category: LibraryCategory.quizzes,
           createdAt: q.createdAt,
+          documentId: q.documentId,
+          source: doc == null ? null : _sourceOf(doc),
           sourceFileName: doc?.sourceFileName,
           searchText: _librarySearchText(q.title, doc?.sourceFileName,
               q.questions.map((qq) => qq.prompt).join(' ')),
@@ -312,6 +346,8 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
           title: title,
           category: LibraryCategory.rewrites,
           createdAt: r.createdAt,
+          documentId: r.documentId,
+          source: doc == null ? null : _sourceOf(doc),
           sourceFileName: doc?.sourceFileName,
           searchText:
               _librarySearchText(title, doc?.sourceFileName, r.rewrittenText),

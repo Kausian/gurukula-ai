@@ -11,12 +11,14 @@ LibraryItem _item(
   DateTime createdAt, {
   String title = '',
   String search = '',
+  LibrarySource? source,
 }) =>
     LibraryItem(
       id: id,
       title: title.isEmpty ? id : title,
       category: category,
       createdAt: createdAt,
+      source: source,
       searchText: search.toLowerCase(),
     );
 
@@ -65,5 +67,41 @@ void main() {
     final result = filterAndSortLibrary(items,
         query: 'water', typeIndex: 3, sort: LibrarySort.newest);
     expect(result.single.id, 'b'); // flashcards type + matches 'water'
+  });
+
+  group('source filter (Phase 12B)', () {
+    final sourced = [
+      _item('pasted', LibraryCategory.notes, DateTime.utc(2026, 1, 1),
+          source: LibrarySource.pasted),
+      _item('txt', LibraryCategory.notes, DateTime.utc(2026, 1, 2),
+          source: LibrarySource.txt),
+      _item('pdf', LibraryCategory.notes, DateTime.utc(2026, 1, 3),
+          source: LibrarySource.pdf),
+      _item('idea', LibraryCategory.ideas, DateTime.utc(2026, 1, 4)), // no source
+    ];
+
+    test('null source returns everything, including unsourced items', () {
+      final result = filterAndSortLibrary(sourced,
+          query: '', typeIndex: 0, sort: LibrarySort.newest, source: null);
+      expect(result.length, 4);
+    });
+
+    test('a specific source keeps only matching items and drops unsourced', () {
+      final result = filterAndSortLibrary(sourced,
+          query: '',
+          typeIndex: 0,
+          sort: LibrarySort.newest,
+          source: LibrarySource.pdf);
+      expect(result.map((i) => i.id).toList(), ['pdf']);
+    });
+
+    test('source composes with type and sort', () {
+      final result = filterAndSortLibrary(sourced,
+          query: '',
+          typeIndex: 1, // Notes
+          sort: LibrarySort.oldest,
+          source: LibrarySource.txt);
+      expect(result.single.id, 'txt');
+    });
   });
 }

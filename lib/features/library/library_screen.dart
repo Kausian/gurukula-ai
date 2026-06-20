@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../core/utils/date_format.dart';
@@ -11,6 +12,7 @@ import '../../core/widgets/icon_chip.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../data/providers.dart';
+import 'rewrite_preview_sheet.dart';
 
 /// Library: a saved learning space, all stored on device, backed by Hive.
 ///
@@ -42,10 +44,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     super.dispose();
   }
 
-  void _comingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming in a later phase')),
-    );
+  /// Opens a library item: workspace for notes and generated content, the idea
+  /// detail for ideas, and a read-only preview sheet for rewrites (Phase 12B).
+  void _open(LibraryItem item) {
+    switch (item.category) {
+      case LibraryCategory.notes:
+      case LibraryCategory.summaries:
+      case LibraryCategory.flashcards:
+      case LibraryCategory.quizzes:
+        final docId = item.documentId;
+        if (docId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Original note not found')),
+          );
+          return;
+        }
+        context.push('/workspace/$docId');
+      case LibraryCategory.ideas:
+        context.push('/idea/${item.id}');
+      case LibraryCategory.rewrites:
+        showRewritePreview(context, ref, item.id, item.title);
+    }
   }
 
   @override
@@ -55,6 +74,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final selected = ref.watch(libraryFilterProvider);
     final query = ref.watch(librarySearchProvider);
     final sort = ref.watch(librarySortProvider);
+    final source = ref.watch(librarySourceProvider);
     final allItems = ref.watch(libraryItemsProvider);
 
     final items = filterAndSortLibrary(
@@ -62,6 +82,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       query: query,
       typeIndex: selected,
       sort: sort,
+      source: source,
     );
 
     return Scaffold(
@@ -114,6 +135,34 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   Text('${items.length} ${items.length == 1 ? 'item' : 'items'}',
                       style: theme.textTheme.bodySmall),
                   const Spacer(),
+                  PopupMenuButton<LibrarySource?>(
+                    initialValue: source,
+                    tooltip: 'Filter by source',
+                    onSelected: (value) =>
+                        ref.read(librarySourceProvider.notifier).state = value,
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: null, child: Text('All sources')),
+                      PopupMenuItem(
+                          value: LibrarySource.pasted, child: Text('Pasted')),
+                      PopupMenuItem(
+                          value: LibrarySource.txt, child: Text('TXT import')),
+                      PopupMenuItem(
+                          value: LibrarySource.pdf, child: Text('PDF import')),
+                    ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.filter_list_rounded,
+                            size: 18, color: scheme.primary),
+                        const SizedBox(width: 4),
+                        Text(_sourceLabel(source),
+                            style: theme.textTheme.labelLarge
+                                ?.copyWith(color: scheme.primary)),
+                        Icon(Icons.arrow_drop_down_rounded, color: scheme.primary),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
                   TextButton.icon(
                     onPressed: () =>
                         ref.read(librarySortProvider.notifier).state =
@@ -140,7 +189,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, index) => _LibraryTile(
                           item: items[index],
-                          onTap: _comingSoon,
+                          onTap: () => _open(items[index]),
                         ),
                       ),
               ),
@@ -149,6 +198,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         ),
       ),
     );
+  }
+
+  String _sourceLabel(LibrarySource? source) {
+    switch (source) {
+      case null:
+        return 'Source';
+      case LibrarySource.pasted:
+        return 'Pasted';
+      case LibrarySource.txt:
+        return 'TXT';
+      case LibrarySource.pdf:
+        return 'PDF';
+    }
   }
 
   Widget _emptyState(bool libraryEmpty) {
