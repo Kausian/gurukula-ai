@@ -24,13 +24,14 @@ class FlashcardAdapter extends TypeAdapter<Flashcard> {
       difficulty: fields[4] as Difficulty,
       isReviewed: fields[5] as bool,
       createdAt: fields[6] as DateTime,
+      lastReviewedAt: fields[7] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Flashcard obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class FlashcardAdapter extends TypeAdapter<Flashcard> {
       ..writeByte(5)
       ..write(obj.isReviewed)
       ..writeByte(6)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(7)
+      ..write(obj.lastReviewedAt);
   }
 
   @override

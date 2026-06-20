@@ -18,6 +18,7 @@ import '../features/shell/main_shell.dart';
 import '../features/study/import_preview_screen.dart';
 import '../features/study/paste_text_screen.dart';
 import '../features/study/quiz_screen.dart';
+import '../features/study/revision_screen.dart';
 import '../features/study/study_workspace_screen.dart';
 import '../features/upload/upload_screen.dart';
 
@@ -144,6 +145,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/quiz/:id',
         builder: (context, state) =>
             QuizScreen(quizId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/revision/:scope',
+        builder: (context, state) =>
+            RevisionScreen(scope: state.pathParameters['scope']!),
       ),
     ],
   );

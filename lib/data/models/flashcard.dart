@@ -15,6 +15,7 @@ class Flashcard {
     required this.difficulty,
     required this.isReviewed,
     required this.createdAt,
+    this.lastReviewedAt,
   });
 
   @HiveField(0)
@@ -25,6 +26,9 @@ class Flashcard {
   final String question;
   @HiveField(3)
   final String answer;
+
+  /// In Revision Mode this holds the student's self-rating (Easy/Medium/Hard).
+  /// Before a card is reviewed it is the difficulty from generation.
   @HiveField(4)
   final Difficulty difficulty;
   @HiveField(5)
@@ -32,9 +36,18 @@ class Flashcard {
   @HiveField(6)
   final DateTime createdAt;
 
+  /// When the card was last reviewed in Revision Mode (Phase 11A). Nullable so
+  /// flashcards saved before this field existed still load (= never reviewed).
+  @HiveField(7)
+  final DateTime? lastReviewedAt;
+
   /// Returns a copy with selected fields changed (same id, so it overwrites in
-  /// Hive). Used to toggle [isReviewed].
-  Flashcard copyWith({bool? isReviewed, Difficulty? difficulty}) {
+  /// Hive). Used to toggle [isReviewed] and record a revision rating.
+  Flashcard copyWith({
+    bool? isReviewed,
+    Difficulty? difficulty,
+    DateTime? lastReviewedAt,
+  }) {
     return Flashcard(
       id: id,
       documentId: documentId,
@@ -43,6 +56,7 @@ class Flashcard {
       difficulty: difficulty ?? this.difficulty,
       isReviewed: isReviewed ?? this.isReviewed,
       createdAt: createdAt,
+      lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
     );
   }
 }

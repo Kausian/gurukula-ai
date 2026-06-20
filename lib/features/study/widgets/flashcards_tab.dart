@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/utils/share_format.dart';
@@ -84,6 +85,12 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
           ],
         ),
         const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: () => context.push('/revision/${widget.documentId}'),
+          icon: const Icon(Icons.school_rounded),
+          label: const Text('Start revision'),
+        ),
+        const SizedBox(height: 16),
         for (final card in cards) ...[
           _FlashcardTile(card: card),
           const SizedBox(height: 12),

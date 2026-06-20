@@ -140,6 +140,30 @@ final recentActivityProvider = Provider<List<ActivityEvent>>((ref) {
   return ref.watch(activityRepositoryProvider).recent();
 });
 
+/// Revision Mode summary for Home (Phase 11A): how many cards were reviewed,
+/// how many the student found hard, and the most recently reviewed cards.
+class RevisionStats {
+  const RevisionStats({
+    required this.reviewed,
+    required this.hard,
+    required this.recent,
+  });
+
+  final int reviewed;
+  final int hard;
+  final List<Flashcard> recent;
+}
+
+final revisionStatsProvider = Provider<RevisionStats>((ref) {
+  ref.watch(dataChangesProvider);
+  final repo = ref.watch(flashcardRepositoryProvider);
+  return RevisionStats(
+    reviewed: repo.reviewedCount,
+    hard: repo.hardReviewedCount,
+    recent: repo.recentlyReviewed(),
+  );
+});
+
 // ---------------------------------------------------------------------------
 // Library view model: a single list across all saved content types.
 // ---------------------------------------------------------------------------

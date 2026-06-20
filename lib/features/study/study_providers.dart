@@ -220,6 +220,19 @@ class StudyController {
         .save(card.copyWith(isReviewed: reviewed));
   }
 
+  /// Records a Revision Mode rating for a card (Phase 11A): marks it reviewed,
+  /// stores the student's Easy/Medium/Hard self-rating in [difficulty], and
+  /// stamps the review time.
+  Future<void> recordReview(Flashcard card, Difficulty rating) {
+    return _ref.read(flashcardRepositoryProvider).save(
+          card.copyWith(
+            isReviewed: true,
+            difficulty: rating,
+            lastReviewedAt: DateTime.now().toUtc(),
+          ),
+        );
+  }
+
   String _deriveTitle(String cleaned) {
     final words = firstWords(cleaned, 6);
     if (words.isEmpty) return 'Untitled note';

@@ -32,6 +32,18 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  /// Starts a global revision session, or nudges the student to make cards.
+  void _startRevision(BuildContext context, WidgetRef ref) {
+    final hasCards = ref.read(flashcardRepositoryProvider).getAll().isNotEmpty;
+    if (!hasCards) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Generate some flashcards first')),
+      );
+      return;
+    }
+    context.push('/revision/all');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(dashboardStatsProvider);
@@ -85,6 +97,8 @@ class HomeScreen extends ConsumerWidget {
                       if (tool.label == 'Upload notes' ||
                           tool.label == 'Paste text') {
                         context.push('/paste');
+                      } else if (tool.label == 'Review flashcards') {
+                        _startRevision(context, ref);
                       } else {
                         _comingSoon(context);
                       }
@@ -125,6 +139,10 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 28),
 
+            const SectionHeader(title: 'Revision'),
+            const _RevisionSection(),
+            const SizedBox(height: 28),
+
             ChallengeCard(
               accent: AppAccents.coral,
               eyebrow: "Today's boost",
@@ -139,6 +157,108 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Home revision summary (Phase 11A): reviewed/hard counts and a short list of
+/// recently reviewed cards, or a nudge to start revising.
+class _RevisionSection extends ConsumerWidget {
+  const _RevisionSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final stats = ref.watch(revisionStatsProvider);
+
+    if (stats.reviewed == 0) {
+      return AppCard(
+        onTap: () {
+          final hasCards =
+              ref.read(flashcardRepositoryProvider).getAll().isNotEmpty;
+          if (!hasCards) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Generate some flashcards first')),
+            );
+            return;
+          }
+          context.push('/revision/all');
+        },
+        child: Row(
+          children: [
+            IconChip(icon: Icons.style_rounded, color: AppAccents.mint.fill),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Revise your flashcards',
+                      style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 3),
+                  Text('Review cards and mark each Easy, Medium or Hard.',
+                      style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: StatCard(
+                  icon: Icons.fact_check_rounded,
+                  value: '${stats.reviewed}',
+                  label: 'Reviewed',
+                  color: AppAccents.mint.fill),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatCard(
+                  icon: Icons.local_fire_department_rounded,
+                  value: '${stats.hard}',
+                  label: 'Hard cards',
+                  color: AppAccents.coral.fill),
+            ),
+          ],
+        ),
+        if (stats.recent.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < stats.recent.length; i++) ...[
+                  if (i > 0) const Divider(height: 1),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(stats.recent[i].question,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(timeAgo(stats.recent[i].lastReviewedAt!),
+                            style: theme.textTheme.labelMedium),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
