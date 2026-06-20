@@ -92,6 +92,7 @@ class _IdeaDetailScreenState extends ConsumerState<IdeaDetailScreen> {
         actions: [
           ShareActions(
             label: 'Idea',
+            fileBaseName: '${idea.title} idea',
             buildText: () => ShareFormat.idea(idea),
           ),
         ],

@@ -72,6 +72,8 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
             ),
             ShareActions(
               label: 'Flashcards',
+              fileBaseName:
+                  '${ref.read(documentProvider(widget.documentId))?.title ?? 'Note'} flashcards',
               buildText: () => ShareFormat.flashcards(
                 ref.read(documentProvider(widget.documentId))?.title ?? 'Note',
                 cards,

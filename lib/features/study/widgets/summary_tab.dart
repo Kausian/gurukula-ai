@@ -36,6 +36,7 @@ class SummaryTab extends ConsumerWidget {
           alignment: Alignment.centerRight,
           child: ShareActions(
             label: 'Summary',
+            fileBaseName: '$docTitle summary',
             buildText: () => ShareFormat.summary(docTitle, summary),
           ),
         ),

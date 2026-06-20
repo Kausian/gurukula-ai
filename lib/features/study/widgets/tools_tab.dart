@@ -106,6 +106,7 @@ class _ToolsTabState extends ConsumerState<ToolsTab> {
             title: 'Result',
             trailing: ShareActions(
               label: 'Rewrite',
+              fileBaseName: '${_resultLabel ?? 'Rewrite'} rewrite',
               buildText: () =>
                   ShareFormat.rewrite(_resultLabel ?? 'Result', _result ?? ''),
             ),

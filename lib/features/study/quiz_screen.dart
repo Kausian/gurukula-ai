@@ -238,6 +238,7 @@ class _ResultView extends ConsumerWidget {
         actions: [
           ShareActions(
             label: 'Quiz result',
+            fileBaseName: '$docTitle quiz result',
             buildText: () => ShareFormat.quizResult(
               docTitle,
               quiz,
