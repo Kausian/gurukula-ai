@@ -6,6 +6,7 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import 'local/hive_boxes.dart';
 import 'models/activity_event.dart';
+import 'models/enums.dart';
 import 'models/flashcard.dart';
 import 'models/idea.dart';
 import 'models/quiz.dart';
@@ -174,7 +175,10 @@ final revisionStatsProvider = Provider<RevisionStats>((ref) {
 // Library view model: a single list across all saved content types.
 // ---------------------------------------------------------------------------
 
-enum LibraryCategory { notes, summaries, flashcards, ideas, quizzes }
+enum LibraryCategory { notes, summaries, flashcards, ideas, quizzes, rewrites }
+
+/// How the Library list is ordered (Phase 12A).
+enum LibrarySort { newest, oldest }
 
 class LibraryItem {
   const LibraryItem({
@@ -182,16 +186,52 @@ class LibraryItem {
     required this.title,
     required this.category,
     required this.createdAt,
+    this.sourceFileName,
+    this.searchText = '',
   });
 
   final String id;
   final String title;
   final LibraryCategory category;
   final DateTime createdAt;
+
+  /// Original imported file name, when the item came from a file (Phase 9).
+  final String? sourceFileName;
+
+  /// Lowercased, bounded index of title + file name + a content preview, used
+  /// by Library search (Phase 12A).
+  final String searchText;
 }
 
-/// Selected filter chip index on the Library screen (0 = All).
+/// Selected type-filter chip index on the Library screen (0 = All).
 final libraryFilterProvider = StateProvider<int>((ref) => 0);
+
+/// Current Library search query (Phase 12A).
+final librarySearchProvider = StateProvider<String>((ref) => '');
+
+/// Current Library sort order (Phase 12A).
+final librarySortProvider = StateProvider<LibrarySort>((ref) => LibrarySort.newest);
+
+/// Builds the search index for an item: title + file name + a bounded preview
+/// so search stays fast even for large imported documents.
+String _librarySearchText(String title, String? fileName, String body) {
+  final preview = body.length > 500 ? body.substring(0, 500) : body;
+  return '$title ${fileName ?? ''} $preview'.toLowerCase();
+}
+
+/// A short, human-readable title for a rewrite, which has no title of its own.
+String _rewriteTitle(RewriteTone tone) {
+  switch (tone) {
+    case RewriteTone.proofread:
+      return 'Proofread text';
+    case RewriteTone.simple:
+      return 'Simplified text';
+    case RewriteTone.formal:
+      return 'Formal rewrite';
+    case RewriteTone.short:
+      return 'Shortened text';
+  }
+}
 
 /// All saved items, newest first, ready for the Library list.
 final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
@@ -201,6 +241,7 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
   final flashcards = ref.watch(flashcardRepositoryProvider).getAll();
   final ideas = ref.watch(ideaRepositoryProvider).getAll();
   final quizzes = ref.watch(quizRepositoryProvider).getAll();
+  final rewrites = ref.watch(rewriteRepositoryProvider).getAll();
   final docRepo = ref.watch(documentRepositoryProvider);
 
   final items = <LibraryItem>[
@@ -210,35 +251,72 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
         title: d.title,
         category: LibraryCategory.notes,
         createdAt: d.createdAt,
+        sourceFileName: d.sourceFileName,
+        searchText: _librarySearchText(d.title, d.sourceFileName, d.cleanedText),
       ),
     for (final s in summaries)
-      LibraryItem(
-        id: s.id,
-        title: docRepo.getById(s.documentId)?.title ?? 'Summary',
-        category: LibraryCategory.summaries,
-        createdAt: s.createdAt,
-      ),
+      () {
+        final doc = docRepo.getById(s.documentId);
+        final title = doc?.title ?? 'Summary';
+        return LibraryItem(
+          id: s.id,
+          title: title,
+          category: LibraryCategory.summaries,
+          createdAt: s.createdAt,
+          sourceFileName: doc?.sourceFileName,
+          searchText: _librarySearchText(title, doc?.sourceFileName,
+              '${s.shortSummary} ${s.keyPoints.join(' ')}'),
+        );
+      }(),
     for (final f in flashcards)
-      LibraryItem(
-        id: f.id,
-        title: f.question,
-        category: LibraryCategory.flashcards,
-        createdAt: f.createdAt,
-      ),
+      () {
+        final doc = docRepo.getById(f.documentId);
+        return LibraryItem(
+          id: f.id,
+          title: f.question,
+          category: LibraryCategory.flashcards,
+          createdAt: f.createdAt,
+          sourceFileName: doc?.sourceFileName,
+          searchText: _librarySearchText(
+              f.question, doc?.sourceFileName, f.answer),
+        );
+      }(),
     for (final i in ideas)
       LibraryItem(
         id: i.id,
         title: i.title,
         category: LibraryCategory.ideas,
         createdAt: i.createdAt,
+        searchText:
+            _librarySearchText(i.title, null, '${i.problem} ${i.features.join(' ')}'),
       ),
     for (final q in quizzes)
-      LibraryItem(
-        id: q.id,
-        title: q.title,
-        category: LibraryCategory.quizzes,
-        createdAt: q.createdAt,
-      ),
+      () {
+        final doc = docRepo.getById(q.documentId);
+        return LibraryItem(
+          id: q.id,
+          title: q.title,
+          category: LibraryCategory.quizzes,
+          createdAt: q.createdAt,
+          sourceFileName: doc?.sourceFileName,
+          searchText: _librarySearchText(q.title, doc?.sourceFileName,
+              q.questions.map((qq) => qq.prompt).join(' ')),
+        );
+      }(),
+    for (final r in rewrites)
+      () {
+        final doc = docRepo.getById(r.documentId);
+        final title = _rewriteTitle(r.tone);
+        return LibraryItem(
+          id: r.id,
+          title: title,
+          category: LibraryCategory.rewrites,
+          createdAt: r.createdAt,
+          sourceFileName: doc?.sourceFileName,
+          searchText:
+              _librarySearchText(title, doc?.sourceFileName, r.rewrittenText),
+        );
+      }(),
   ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   return items;

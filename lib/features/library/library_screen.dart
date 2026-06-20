@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
 import '../../core/utils/date_format.dart';
+import '../../core/utils/library_filter.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/filter_chip_row.dart';
@@ -12,9 +13,19 @@ import '../../core/widgets/status_badge.dart';
 import '../../data/providers.dart';
 
 /// Library: a saved learning space, all stored on device, backed by Hive.
-class LibraryScreen extends ConsumerWidget {
+///
+/// Phase 12A adds live search, a Rewrites type, and newest/oldest sorting.
+class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
+  @override
+  ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
+}
+
+class _LibraryScreenState extends ConsumerState<LibraryScreen> {
+  final _search = TextEditingController();
+
+  // Order must match LibraryCategory.values (All is prepended).
   static const List<String> _filters = [
     'All',
     'Notes',
@@ -22,25 +33,36 @@ class LibraryScreen extends ConsumerWidget {
     'Flashcards',
     'Ideas',
     'Quizzes',
+    'Rewrites',
   ];
 
-  void _comingSoon(BuildContext context) {
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _comingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Coming in a later phase')),
     );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     final selected = ref.watch(libraryFilterProvider);
+    final query = ref.watch(librarySearchProvider);
+    final sort = ref.watch(librarySortProvider);
     final allItems = ref.watch(libraryItemsProvider);
 
-    final items = selected == 0
-        ? allItems
-        : allItems
-            .where((i) => i.category == LibraryCategory.values[selected - 1])
-            .toList();
+    final items = filterAndSortLibrary(
+      allItems,
+      query: query,
+      typeIndex: selected,
+      sort: sort,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -60,11 +82,23 @@ class LibraryScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               TextField(
-                enabled: false,
+                controller: _search,
+                onChanged: (value) =>
+                    ref.read(librarySearchProvider.notifier).state = value,
                 decoration: InputDecoration(
                   hintText: 'Search your library',
                   prefixIcon: Icon(Icons.search_rounded,
                       color: scheme.onSurfaceVariant),
+                  suffixIcon: query.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.close_rounded),
+                          tooltip: 'Clear',
+                          onPressed: () {
+                            _search.clear();
+                            ref.read(librarySearchProvider.notifier).state = '';
+                          },
+                        ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -74,28 +108,70 @@ class LibraryScreen extends ConsumerWidget {
                 onSelected: (index) =>
                     ref.read(libraryFilterProvider.notifier).state = index,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text('${items.length} ${items.length == 1 ? 'item' : 'items'}',
+                      style: theme.textTheme.bodySmall),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () =>
+                        ref.read(librarySortProvider.notifier).state =
+                            sort == LibrarySort.newest
+                                ? LibrarySort.oldest
+                                : LibrarySort.newest,
+                    icon: Icon(
+                        sort == LibrarySort.newest
+                            ? Icons.south_rounded
+                            : Icons.north_rounded,
+                        size: 18),
+                    label: Text(
+                        sort == LibrarySort.newest ? 'Newest' : 'Oldest'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
               Expanded(
                 child: items.isEmpty
-                    ? const EmptyState(
-                        icon: Icons.folder_open_rounded,
-                        title: 'Nothing here yet',
-                        message:
-                            'Items you create will appear here, all stored '
-                            'privately on your device.',
-                      )
+                    ? _emptyState(allItems.isEmpty)
                     : ListView.separated(
-                        padding: const EdgeInsets.only(top: 8, bottom: 24),
+                        padding: const EdgeInsets.only(top: 4, bottom: 24),
                         itemCount: items.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, index) => _LibraryTile(
                           item: items[index],
-                          onTap: () => _comingSoon(context),
+                          onTap: _comingSoon,
                         ),
                       ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyState(bool libraryEmpty) {
+    final state = libraryEmpty
+        ? const EmptyState(
+            icon: Icons.folder_open_rounded,
+            title: 'Nothing here yet',
+            message: 'Items you create will appear here, all stored privately '
+                'on your device.',
+          )
+        : const EmptyState(
+            icon: Icons.search_off_rounded,
+            title: 'No matches',
+            message: 'Try a different search or filter.',
+          );
+    // Make the empty state keyboard-safe: when the keyboard shrinks the
+    // available height below the content, it scrolls instead of overflowing,
+    // and stays vertically centered when there is room.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: state,
         ),
       ),
     );
@@ -112,6 +188,7 @@ class _LibraryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final style = _styleFor(item.category);
+    final fileName = item.sourceFileName;
     return AppCard(
       onTap: onTap,
       child: Row(
@@ -129,6 +206,23 @@ class _LibraryTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text('${style.label} · ${timeAgo(item.createdAt)}',
                     style: theme.textTheme.bodySmall),
+                if (fileName != null && fileName.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.insert_drive_file_outlined,
+                          size: 13, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(fileName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant)),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -153,6 +247,9 @@ class _LibraryTile extends StatelessWidget {
             Icons.lightbulb_rounded, AppAccents.coral.fill, 'Idea');
       case LibraryCategory.quizzes:
         return _TileStyle(Icons.quiz_rounded, AppAccents.sky.fill, 'Quiz');
+      case LibraryCategory.rewrites:
+        return _TileStyle(
+            Icons.edit_note_rounded, AppAccents.pink.fill, 'Rewrite');
     }
   }
 }
