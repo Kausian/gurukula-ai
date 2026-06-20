@@ -154,7 +154,13 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Imported and processed on your device. Nothing is uploaded.',
+                      widget.args.type == DocumentType.image
+                          ? 'Text recognized on your device. Works best with '
+                              'clear printed English text — Sinhala and Tamil '
+                              'are not supported yet. First-time setup may need '
+                              'Google Play Services once.'
+                          : 'Imported and processed on your device. Nothing is '
+                              'uploaded.',
                       style: theme.textTheme.bodySmall,
                     ),
                   ),

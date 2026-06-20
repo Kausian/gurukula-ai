@@ -111,7 +111,7 @@ class UploadScreen extends StatelessWidget {
               accent: AppAccents.coral.fill,
               icon: Icons.document_scanner_rounded,
               title: 'Scan notes',
-              subtitle: 'Extract text from a photo of printed notes.',
+              subtitle: 'Extract text from clear printed English notes.',
               badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
               onTap: () => _scanNotes(context),
             ),

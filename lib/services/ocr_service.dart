@@ -33,8 +33,8 @@ class OcrService {
       final text = result.text.trim();
       if (text.isEmpty) {
         throw const FileImportException(
-          "Couldn't find readable text in this image. Try a clearer photo of "
-          'printed text.',
+          "Couldn't find readable text. Works best with clear printed English "
+          'text (Sinhala and Tamil are not supported yet).',
         );
       }
       return ImportedFile(text: text, fileName: file.name);
