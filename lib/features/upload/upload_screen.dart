@@ -8,6 +8,7 @@ import '../../core/widgets/page_header.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../data/models/enums.dart';
 import '../../services/file_import_service.dart';
+import '../../services/ocr_service.dart';
 import '../study/import_preview_screen.dart';
 
 /// Upload landing screen: interactive input-method cards.
@@ -30,6 +31,14 @@ class UploadScreen extends StatelessWidget {
         context,
         const FileImportService().pickPdfFile(),
         DocumentType.pdf,
+      );
+
+  /// Picks a gallery image, extracts its text with on-device OCR, and opens the
+  /// preview (Phase 14B).
+  Future<void> _scanNotes(BuildContext context) => _runImport(
+        context,
+        const OcrService().pickImageAndExtract(),
+        DocumentType.image,
       );
 
   /// Shared import handler: await the [picker], open the preview on success,
@@ -102,8 +111,9 @@ class UploadScreen extends StatelessWidget {
               accent: AppAccents.coral.fill,
               icon: Icons.document_scanner_rounded,
               title: 'Scan notes',
-              subtitle: 'Capture handwritten or printed notes.',
-              badge: const StatusBadge(label: 'Later', tone: BadgeTone.neutral),
+              subtitle: 'Extract text from a photo of printed notes.',
+              badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
+              onTap: () => _scanNotes(context),
             ),
             const SizedBox(height: 12),
             _OptionCard(

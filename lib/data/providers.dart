@@ -180,9 +180,10 @@ enum LibraryCategory { notes, summaries, flashcards, ideas, quizzes, rewrites }
 /// How the Library list is ordered (Phase 12A).
 enum LibrarySort { newest, oldest }
 
-/// Where a library item ultimately came from (Phase 12B). Items with no parent
-/// document (ideas) have a null source and only show under the "All" filter.
-enum LibrarySource { pasted, txt, pdf }
+/// Where a library item ultimately came from (Phase 12B; `image`/scan added in
+/// Phase 14B). Items with no parent document (ideas) have a null source and
+/// only show under the "All" filter.
+enum LibrarySource { pasted, txt, pdf, image }
 
 class LibraryItem {
   const LibraryItem({
@@ -218,9 +219,11 @@ class LibraryItem {
   final String searchText;
 }
 
-/// Derives a [LibrarySource] from the parent document: PDF type → pdf, text
-/// type with a file name → txt import, text type without one → pasted.
+/// Derives a [LibrarySource] from the parent document: image type → scanned,
+/// PDF type → pdf, text type with a file name → txt import, text type without
+/// one → pasted.
 LibrarySource _sourceOf(StudyDocument doc) {
+  if (doc.type == DocumentType.image) return LibrarySource.image;
   if (doc.type == DocumentType.pdf) return LibrarySource.pdf;
   if ((doc.sourceFileName ?? '').isNotEmpty) return LibrarySource.txt;
   return LibrarySource.pasted;

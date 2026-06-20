@@ -1,0 +1,51 @@
+import 'package:file_selector/file_selector.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
+import 'file_import_service.dart';
+
+/// Extracts text from a gallery image using on-device OCR (Phase 14B).
+///
+/// Uses Google ML Kit Latin text recognition. Inference runs locally — the
+/// image is never uploaded. Returns the same [ImportedFile] shape as the TXT
+/// and PDF importers so the rest of the flow (preview → create) is identical.
+class OcrService {
+  const OcrService();
+
+  /// Opens the gallery picker for an image and extracts its text on-device.
+  ///
+  /// Returns `null` if the user cancels. Throws a [FileImportException] with a
+  /// friendly message if the image can't be read or has no recognizable text.
+  Future<ImportedFile?> pickImageAndExtract() async {
+    const typeGroup = XTypeGroup(
+      label: 'Images',
+      extensions: <String>['jpg', 'jpeg', 'png', 'webp', 'bmp'],
+      mimeTypes: <String>['image/*'],
+      uniformTypeIdentifiers: <String>['public.image'],
+    );
+
+    final XFile? file = await openFile(acceptedTypeGroups: const [typeGroup]);
+    if (file == null) return null; // cancelled
+
+    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    try {
+      final result =
+          await recognizer.processImage(InputImage.fromFilePath(file.path));
+      final text = result.text.trim();
+      if (text.isEmpty) {
+        throw const FileImportException(
+          "Couldn't find readable text in this image. Try a clearer photo of "
+          'printed text.',
+        );
+      }
+      return ImportedFile(text: text, fileName: file.name);
+    } on FileImportException {
+      rethrow;
+    } catch (_) {
+      throw const FileImportException(
+        'Text recognition failed. Please try another image.',
+      );
+    } finally {
+      await recognizer.close();
+    }
+  }
+}

@@ -148,6 +148,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           value: LibrarySource.txt, child: Text('TXT import')),
                       PopupMenuItem(
                           value: LibrarySource.pdf, child: Text('PDF import')),
+                      PopupMenuItem(
+                          value: LibrarySource.image, child: Text('Scanned')),
                     ],
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -210,6 +212,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         return 'TXT';
       case LibrarySource.pdf:
         return 'PDF';
+      case LibrarySource.image:
+        return 'Scanned';
     }
   }
 
