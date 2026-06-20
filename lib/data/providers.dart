@@ -140,17 +140,21 @@ final recentActivityProvider = Provider<List<ActivityEvent>>((ref) {
   return ref.watch(activityRepositoryProvider).recent();
 });
 
-/// Revision Mode summary for Home (Phase 11A): how many cards were reviewed,
-/// how many the student found hard, and the most recently reviewed cards.
+/// Revision summary for Home: review counts, plus spaced-practice scheduling
+/// (Phase 11B) — how many cards are due now and how many are upcoming.
 class RevisionStats {
   const RevisionStats({
     required this.reviewed,
     required this.hard,
+    required this.due,
+    required this.upcoming,
     required this.recent,
   });
 
   final int reviewed;
   final int hard;
+  final int due;
+  final int upcoming;
   final List<Flashcard> recent;
 }
 
@@ -160,6 +164,8 @@ final revisionStatsProvider = Provider<RevisionStats>((ref) {
   return RevisionStats(
     reviewed: repo.reviewedCount,
     hard: repo.hardReviewedCount,
+    due: repo.dueCount(),
+    upcoming: repo.upcomingCount(),
     recent: repo.recentlyReviewed(),
   );
 });

@@ -32,16 +32,17 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// Starts a global revision session, or nudges the student to make cards.
+  /// Starts revision, prioritizing cards that are due (Phase 11B). Falls back
+  /// to the full deck when nothing is due, or nudges when there are no cards.
   void _startRevision(BuildContext context, WidgetRef ref) {
-    final hasCards = ref.read(flashcardRepositoryProvider).getAll().isNotEmpty;
-    if (!hasCards) {
+    final repo = ref.read(flashcardRepositoryProvider);
+    if (repo.getAll().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Generate some flashcards first')),
       );
       return;
     }
-    context.push('/revision/all');
+    context.push(repo.dueCount() > 0 ? '/revision/due' : '/revision/all');
   }
 
   @override
@@ -166,24 +167,27 @@ class HomeScreen extends ConsumerWidget {
 class _RevisionSection extends ConsumerWidget {
   const _RevisionSection();
 
+  /// Opens revision, preferring due cards, or nudges when there are no cards.
+  void _open(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(flashcardRepositoryProvider);
+    if (repo.getAll().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Generate some flashcards first')),
+      );
+      return;
+    }
+    context.push(repo.dueCount() > 0 ? '/revision/due' : '/revision/all');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final stats = ref.watch(revisionStatsProvider);
+    final hasCards = ref.watch(flashcardRepositoryProvider).getAll().isNotEmpty;
 
-    if (stats.reviewed == 0) {
+    if (!hasCards) {
       return AppCard(
-        onTap: () {
-          final hasCards =
-              ref.read(flashcardRepositoryProvider).getAll().isNotEmpty;
-          if (!hasCards) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Generate some flashcards first')),
-            );
-            return;
-          }
-          context.push('/revision/all');
-        },
+        onTap: () => _open(context, ref),
         child: Row(
           children: [
             IconChip(icon: Icons.style_rounded, color: AppAccents.mint.fill),
@@ -195,7 +199,7 @@ class _RevisionSection extends ConsumerWidget {
                   Text('Revise your flashcards',
                       style: theme.textTheme.titleSmall),
                   const SizedBox(height: 3),
-                  Text('Review cards and mark each Easy, Medium or Hard.',
+                  Text('Generate flashcards, then review them here.',
                       style: theme.textTheme.bodySmall),
                 ],
               ),
@@ -207,8 +211,59 @@ class _RevisionSection extends ConsumerWidget {
       );
     }
 
+    final due = stats.due;
     return Column(
       children: [
+        // Due call-to-action.
+        AppCard(
+          onTap: () => _open(context, ref),
+          color: due > 0 ? theme.colorScheme.primary : null,
+          showBorder: due == 0,
+          child: Row(
+            children: [
+              Icon(
+                due > 0 ? Icons.bolt_rounded : Icons.task_alt_rounded,
+                size: 28,
+                color: due > 0
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      due > 0
+                          ? '$due ${due == 1 ? 'card' : 'cards'} due for review'
+                          : "You're all caught up",
+                      style: theme.textTheme.titleSmall?.copyWith(
+                          color: due > 0 ? theme.colorScheme.onPrimary : null),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      due > 0
+                          ? 'Tap to review now'
+                          : stats.upcoming > 0
+                              ? '${stats.upcoming} scheduled for later'
+                              : 'Review anytime to keep them fresh',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: due > 0
+                              ? theme.colorScheme.onPrimary
+                                  .withValues(alpha: 0.85)
+                              : theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: due > 0
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -223,8 +278,16 @@ class _RevisionSection extends ConsumerWidget {
               child: StatCard(
                   icon: Icons.local_fire_department_rounded,
                   value: '${stats.hard}',
-                  label: 'Hard cards',
+                  label: 'Hard',
                   color: AppAccents.coral.fill),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatCard(
+                  icon: Icons.schedule_rounded,
+                  value: '${stats.upcoming}',
+                  label: 'Upcoming',
+                  color: AppAccents.lavender.fill),
             ),
           ],
         ),

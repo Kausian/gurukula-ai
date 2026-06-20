@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/utils/revision_schedule.dart';
 import '../../core/utils/text_clean.dart';
 import '../../data/models/activity_event.dart';
 import '../../data/models/enums.dart';
@@ -220,15 +221,18 @@ class StudyController {
         .save(card.copyWith(isReviewed: reviewed));
   }
 
-  /// Records a Revision Mode rating for a card (Phase 11A): marks it reviewed,
-  /// stores the student's Easy/Medium/Hard self-rating in [difficulty], and
-  /// stamps the review time.
+  /// Records a Revision Mode rating for a card: marks it reviewed, stores the
+  /// student's Easy/Medium/Hard self-rating in [difficulty], stamps the review
+  /// time, and schedules the next review (Phase 11B: Hard +1d, Medium +3d,
+  /// Easy +7d).
   Future<void> recordReview(Flashcard card, Difficulty rating) {
+    final now = DateTime.now().toUtc();
     return _ref.read(flashcardRepositoryProvider).save(
           card.copyWith(
             isReviewed: true,
             difficulty: rating,
-            lastReviewedAt: DateTime.now().toUtc(),
+            lastReviewedAt: now,
+            nextReviewAt: RevisionSchedule.nextReviewFrom(now, rating),
           ),
         );
   }

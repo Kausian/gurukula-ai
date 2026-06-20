@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../core/utils/revision_schedule.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../data/models/enums.dart';
@@ -43,6 +44,9 @@ class _RevisionScreenState extends ConsumerState<RevisionScreen> {
 
   List<Flashcard> _loadDeck() {
     final repo = ref.read(flashcardRepositoryProvider);
+    if (widget.scope == 'due') {
+      return repo.dueCards(); // already ordered most-overdue first
+    }
     final cards =
         widget.scope == 'all' ? repo.getAll() : repo.byDocument(widget.scope);
     cards.sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -53,6 +57,13 @@ class _RevisionScreenState extends ConsumerState<RevisionScreen> {
     final card = _deck[_index];
     await ref.read(studyControllerProvider).recordReview(card, rating);
     if (!mounted) return;
+    final days = RevisionSchedule.intervalDays(rating);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        duration: const Duration(milliseconds: 900),
+        content: Text('Next review in $days ${days == 1 ? 'day' : 'days'}'),
+      ));
     setState(() {
       _tally[rating] = (_tally[rating] ?? 0) + 1;
       _index++;
@@ -80,11 +91,18 @@ class _RevisionScreenState extends ConsumerState<RevisionScreen> {
 
   Widget _body() {
     if (_deck.isEmpty) {
-      return const EmptyState(
-        icon: Icons.style_outlined,
-        title: 'Nothing to revise yet',
-        message: 'Generate some flashcards first, then come back to revise.',
-      );
+      return widget.scope == 'due'
+          ? const EmptyState(
+              icon: Icons.task_alt_rounded,
+              title: "You're all caught up",
+              message: 'No flashcards are due for review right now.',
+            )
+          : const EmptyState(
+              icon: Icons.style_outlined,
+              title: 'Nothing to revise yet',
+              message:
+                  'Generate some flashcards first, then come back to revise.',
+            );
     }
     if (_index >= _deck.length) {
       return _SummaryView(

@@ -75,6 +75,41 @@ void main() {
     expect(updated.lastReviewedAt, isNotNull);
   });
 
+  test('recordReview schedules nextReviewAt by the rating interval', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final repo = container.read(flashcardRepositoryProvider);
+    await repo.save(_card('c1'));
+    final controller = container.read(studyControllerProvider);
+
+    await controller.recordReview(repo.getById('c1')!, Difficulty.easy);
+    final card = repo.getById('c1')!;
+    final days =
+        card.nextReviewAt!.difference(card.lastReviewedAt!).inDays;
+    expect(days, 7); // Easy = +7 days
+  });
+
+  test('due/overdue/upcoming counts reflect schedules', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final repo = container.read(flashcardRepositoryProvider);
+
+    // new card (no schedule) -> due
+    await repo.save(_card('new'));
+    // overdue card
+    await repo.save(_card('past')
+        .copyWith(isReviewed: true, nextReviewAt: DateTime.utc(2020, 1, 1)));
+    // upcoming card
+    await repo.save(_card('future')
+        .copyWith(isReviewed: true, nextReviewAt: DateTime.utc(2999, 1, 1)));
+
+    expect(repo.dueCount(), 2); // new + overdue
+    expect(repo.overdueCount(), 1); // only the past one
+    expect(repo.upcomingCount(), 1); // only the future one
+    // overdue sorts before the new (unscheduled) card.
+    expect(repo.dueCards().first.id, 'past');
+  });
+
   test('revision stats count reviewed and hard cards', () async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
