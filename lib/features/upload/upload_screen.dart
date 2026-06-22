@@ -115,7 +115,7 @@ class UploadScreen extends StatelessWidget {
     } catch (_) {
       navigator.pop();
       messenger.showSnackBar(
-        const SnackBar(content: Text("Couldn't import this file.")),
+        const SnackBar(content: Text('Something went wrong. Please try again.')),
       );
     }
   }

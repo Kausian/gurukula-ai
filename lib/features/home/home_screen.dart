@@ -26,12 +26,6 @@ class HomeScreen extends ConsumerWidget {
     _Tool(AppAccents.mint, Icons.style_rounded, 'Review flashcards'),
   ];
 
-  void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming in a later phase')),
-    );
-  }
-
   /// Starts revision, prioritizing cards that are due (Phase 11B). Falls back
   /// to the full deck when nothing is due, or nudges when there are no cards.
   void _startRevision(BuildContext context, WidgetRef ref) {
@@ -98,10 +92,12 @@ class HomeScreen extends ConsumerWidget {
                       if (tool.label == 'Upload notes' ||
                           tool.label == 'Paste text') {
                         context.push('/paste');
+                      } else if (tool.label == 'Generate idea') {
+                        context.push('/idea-lab/new');
                       } else if (tool.label == 'Review flashcards') {
                         _startRevision(context, ref);
                       } else {
-                        _comingSoon(context);
+                        context.push('/paste');
                       }
                     },
                   );
@@ -147,9 +143,9 @@ class HomeScreen extends ConsumerWidget {
             ChallengeCard(
               accent: AppAccents.coral,
               eyebrow: "Today's boost",
-              title: 'Create 5 flashcards from your next note.',
+              title: 'Turn a fresh note into flashcards to study.',
               actionLabel: 'Start',
-              onTap: () => _comingSoon(context),
+              onTap: () => context.push('/paste'),
             ),
             const SizedBox(height: 28),
 

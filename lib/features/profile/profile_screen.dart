@@ -23,12 +23,6 @@ import '../study/study_providers.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
-  void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming in a later phase')),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -65,6 +59,10 @@ class ProfileScreen extends ConsumerWidget {
                     backgroundColor: scheme.primary.withValues(alpha: 0.16),
                     backgroundImage:
                         photoUrl != null ? NetworkImage(photoUrl) : null,
+                    // Swallow load failures (e.g. offline) so they don't throw;
+                    // the avatar just shows the tinted circle / icon instead.
+                    onBackgroundImageError:
+                        photoUrl != null ? (_, _) {} : null,
                     child: photoUrl == null
                         ? Icon(Icons.person_rounded,
                             size: 36, color: scheme.primary)
@@ -197,14 +195,7 @@ class ProfileScreen extends ConsumerWidget {
                   _SettingRow(
                       icon: Icons.translate_rounded,
                       label: 'Language',
-                      value: profile?.preferredLanguage ?? 'English',
-                      onTap: () => _comingSoon(context)),
-                  const Divider(height: 1),
-                  _SettingRow(
-                      icon: Icons.short_text_rounded,
-                      label: 'Summary length',
-                      value: 'Medium',
-                      onTap: () => _comingSoon(context)),
+                      value: profile?.preferredLanguage ?? 'English'),
                   const Divider(height: 1),
                   _SettingRow(
                       icon: Icons.lock_outline_rounded,
@@ -492,12 +483,12 @@ class _SettingRow extends StatelessWidget {
             Icon(icon, size: 22, color: scheme.onSurfaceVariant),
             const SizedBox(width: 14),
             Expanded(child: Text(label, style: theme.textTheme.titleSmall)),
-            if (value != null) ...[
-              Text(value!, style: theme.textTheme.bodySmall),
+            if (value != null) Text(value!, style: theme.textTheme.bodySmall),
+            if (onTap != null) ...[
               const SizedBox(width: 6),
+              Icon(Icons.chevron_right_rounded,
+                  size: 20, color: scheme.onSurfaceVariant),
             ],
-            Icon(Icons.chevron_right_rounded,
-                size: 20, color: scheme.onSurfaceVariant),
           ],
         ),
       ),
