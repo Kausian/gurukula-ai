@@ -45,6 +45,8 @@ class LearningToolCard extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w800, color: ink),
             ),

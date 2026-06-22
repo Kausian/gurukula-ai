@@ -30,9 +30,15 @@ class StatCard extends StatelessWidget {
         children: [
           IconChip(icon: icon, color: color, size: 38),
           const SizedBox(height: 14),
-          Text(value, style: theme.textTheme.headlineSmall),
+          Text(value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.headlineSmall),
           const SizedBox(height: 1),
-          Text(label, style: theme.textTheme.bodySmall),
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall),
         ],
       ),
     );

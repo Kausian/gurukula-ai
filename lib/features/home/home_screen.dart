@@ -77,7 +77,7 @@ class HomeScreen extends ConsumerWidget {
 
             const SectionHeader(title: 'Explore tools'),
             SizedBox(
-              height: 142,
+              height: 156,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _tools.length,
@@ -89,8 +89,10 @@ class HomeScreen extends ConsumerWidget {
                     icon: tool.icon,
                     label: tool.label,
                     onTap: () {
-                      if (tool.label == 'Upload notes' ||
-                          tool.label == 'Paste text') {
+                      if (tool.label == 'Upload notes') {
+                        // Switch to the Upload tab (all import options live there).
+                        context.go('/upload');
+                      } else if (tool.label == 'Paste text') {
                         context.push('/paste');
                       } else if (tool.label == 'Generate idea') {
                         context.push('/idea-lab/new');
