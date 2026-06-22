@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../data/local/hive_boxes.dart';
 import '../../data/providers.dart';
+
+/// The app's version name from the build (e.g. "1.10.0"), read at runtime so
+/// the About section is always accurate.
+final appVersionProvider = FutureProvider<String>((ref) async {
+  final info = await PackageInfo.fromPlatform();
+  return info.version;
+});
 
 /// The app theme mode, persisted locally in the settings box.
 final themeModeProvider =

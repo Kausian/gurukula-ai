@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
@@ -37,6 +38,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final aiMode = ref.watch(aiModeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final version = ref.watch(appVersionProvider);
 
     final name = profile?.username ?? user?.displayName ?? 'Guest student';
     final subtitle = profile == null
@@ -174,7 +176,7 @@ class ProfileScreen extends ConsumerWidget {
                   const _StatusRow(
                       label: 'OCR',
                       badge:
-                          StatusBadge(label: 'Later', tone: BadgeTone.neutral)),
+                          StatusBadge(label: 'Ready', tone: BadgeTone.success)),
                 ],
               ),
             ),
@@ -208,6 +210,11 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.lock_outline_rounded,
                       label: 'Privacy',
                       onTap: () => _showPrivacy(context)),
+                  const Divider(height: 1),
+                  _SettingRow(
+                      icon: Icons.mail_outline_rounded,
+                      label: 'Send feedback',
+                      onTap: () => _sendFeedback(context)),
                 ],
               ),
             ),
@@ -221,8 +228,13 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   Text(AppStrings.appName, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 4),
-                  Text('${AppStrings.tagline}. Version 1.0.0',
-                      style: theme.textTheme.bodySmall),
+                  Text(
+                    version.maybeWhen(
+                      data: (v) => '${AppStrings.tagline}. Version $v',
+                      orElse: () => '${AppStrings.tagline}.',
+                    ),
+                    style: theme.textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 12),
                   Text('Flutter · Riverpod · Hive · Material 3 · On-device AI',
                       style: theme.textTheme.labelMedium),
@@ -309,6 +321,37 @@ class ProfileScreen extends ConsumerWidget {
     if (selected != null) {
       await ref.read(themeModeProvider.notifier).set(selected);
     }
+  }
+
+  void _sendFeedback(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Send feedback'),
+        content: const Text(
+          "We'd love your feedback or to hear about any issues. Email us at:"
+          '\n\n${AppStrings.feedbackEmail}',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close')),
+          FilledButton(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final navigator = Navigator.of(context);
+              await Clipboard.setData(
+                  const ClipboardData(text: AppStrings.feedbackEmail));
+              navigator.pop();
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Email copied')),
+              );
+            },
+            child: const Text('Copy email'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showPrivacy(BuildContext context) {

@@ -21,4 +21,7 @@ class AppStrings {
 
   /// Privacy promise reused across screens.
   static const String privacyNote = 'Your study data stays on this device';
+
+  /// Contact address for the in-app feedback option.
+  static const String feedbackEmail = 'skausian@gmail.com';
 }

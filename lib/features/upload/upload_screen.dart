@@ -5,7 +5,6 @@ import '../../app/theme.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/icon_chip.dart';
 import '../../core/widgets/page_header.dart';
-import '../../core/widgets/status_badge.dart';
 import '../../data/models/enums.dart';
 import '../../services/file_import_service.dart';
 import '../../services/ocr_service.dart';
@@ -23,6 +22,7 @@ class UploadScreen extends StatelessWidget {
         context,
         const FileImportService().pickTextFile(),
         DocumentType.text,
+        'Reading file…',
       );
 
   /// Picks a local `.pdf` file, extracts its text on-device, and opens the
@@ -31,6 +31,7 @@ class UploadScreen extends StatelessWidget {
         context,
         const FileImportService().pickPdfFile(),
         DocumentType.pdf,
+        'Extracting text…',
       );
 
   /// Lets the student choose between gallery and camera, then runs on-device
@@ -70,25 +71,37 @@ class UploadScreen extends StatelessWidget {
         context,
         const OcrService().pickImageAndExtract(),
         DocumentType.image,
+        'Recognising text…',
       );
 
   Future<void> _scanFromCamera(BuildContext context) => _runImport(
         context,
         const OcrService().captureImageAndExtract(),
         DocumentType.image,
+        'Recognising text…',
       );
 
-  /// Shared import handler: await the [picker], open the preview on success,
-  /// stay silent on cancel, and surface friendly errors as a SnackBar.
+  /// Shared import handler: show a loading overlay while the [picker] runs
+  /// (extraction can take a second or two), open the preview on success, stay
+  /// silent on cancel, and surface friendly errors as a SnackBar. The overlay
+  /// is dismissed on every path so it can never get stuck.
   Future<void> _runImport(
     BuildContext context,
     Future<ImportedFile?> picker,
     DocumentType type,
+    String loadingMessage,
   ) async {
+    // Capture these before the async gap so we don't use `context` afterwards.
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+
+    _showLoading(context, loadingMessage);
     try {
       final imported = await picker;
-      if (imported == null || !context.mounted) return; // cancelled
-      context.push(
+      navigator.pop(); // dismiss the loading overlay
+      if (imported == null) return; // cancelled
+      router.push(
         '/import-preview',
         extra: ImportPreviewArgs(
           text: imported.text,
@@ -97,18 +110,39 @@ class UploadScreen extends StatelessWidget {
         ),
       );
     } on FileImportException catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
-      }
+      navigator.pop();
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Couldn't import this file.")),
-        );
-      }
+      navigator.pop();
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Couldn't import this file.")),
+      );
     }
   }
+
+  void _showLoading(BuildContext context, String message) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(width: 18),
+              Expanded(child: Text(message)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +165,6 @@ class UploadScreen extends StatelessWidget {
               icon: Icons.content_paste_rounded,
               title: 'Paste text',
               subtitle: 'Drop in lecture notes or any text.',
-              badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
               onTap: () => context.push('/paste'),
             ),
             const SizedBox(height: 12),
@@ -140,7 +173,6 @@ class UploadScreen extends StatelessWidget {
               icon: Icons.picture_as_pdf_rounded,
               title: 'Upload PDF',
               subtitle: 'Import a text-based PDF and extract its text.',
-              badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
               onTap: () => _importPdfFile(context),
             ),
             const SizedBox(height: 12),
@@ -150,7 +182,6 @@ class UploadScreen extends StatelessWidget {
               title: 'Scan notes',
               subtitle:
                   'Best for clear printed English text. Handwriting may be inaccurate.',
-              badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
               onTap: () => _scanNotes(context),
             ),
             const SizedBox(height: 12),
@@ -159,7 +190,6 @@ class UploadScreen extends StatelessWidget {
               icon: Icons.folder_open_rounded,
               title: 'Import from files',
               subtitle: 'Bring in a saved .txt document.',
-              badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
               onTap: () => _importTextFile(context),
             ),
             const SizedBox(height: 22),
@@ -189,14 +219,13 @@ class UploadScreen extends StatelessWidget {
   }
 }
 
-/// A large upload-method card with an icon chip, copy and a status badge.
+/// A large upload-method card with an icon chip, title and subtitle.
 class _OptionCard extends StatelessWidget {
   const _OptionCard({
     required this.accent,
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.badge,
     this.onTap,
   });
 
@@ -204,7 +233,6 @@ class _OptionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final Widget badge;
   final VoidCallback? onTap;
 
   @override
@@ -220,15 +248,7 @@ class _OptionCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child:
-                            Text(title, style: theme.textTheme.titleMedium)),
-                    const SizedBox(width: 8),
-                    badge,
-                  ],
-                ),
+                Text(title, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(subtitle, style: theme.textTheme.bodySmall),
               ],

@@ -16,9 +16,14 @@ class StudyWorkspaceScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final document = ref.watch(documentProvider(documentId));
+    // Watch only the title (not the whole document) so generating flashcards,
+    // quizzes or rewrites doesn't rebuild this tab scaffold — that rebuild,
+    // landing mid-swipe, was what triggered the TabBarView assertion. Each tab
+    // watches its own data. A null title means the document is gone.
+    final title =
+        ref.watch(documentProvider(documentId).select((doc) => doc?.title));
 
-    if (document == null) {
+    if (title == null) {
       return Scaffold(
         appBar: AppBar(),
         body: const Center(child: Text('This note could not be found.')),
@@ -29,7 +34,7 @@ class StudyWorkspaceScreen extends ConsumerWidget {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(document.title, overflow: TextOverflow.ellipsis),
+          title: Text(title, overflow: TextOverflow.ellipsis),
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
