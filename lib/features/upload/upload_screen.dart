@@ -33,11 +33,48 @@ class UploadScreen extends StatelessWidget {
         DocumentType.pdf,
       );
 
-  /// Picks a gallery image, extracts its text with on-device OCR, and opens the
-  /// preview (Phase 14B).
-  Future<void> _scanNotes(BuildContext context) => _runImport(
+  /// Lets the student choose between gallery and camera, then runs on-device
+  /// OCR on the chosen image (Phase 14B gallery, 14C camera).
+  void _scanNotes(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded),
+              title: const Text('Pick from gallery'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _scanFromGallery(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_rounded),
+              title: const Text('Take photo'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _scanFromCamera(context);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _scanFromGallery(BuildContext context) => _runImport(
         context,
         const OcrService().pickImageAndExtract(),
+        DocumentType.image,
+      );
+
+  Future<void> _scanFromCamera(BuildContext context) => _runImport(
+        context,
+        const OcrService().captureImageAndExtract(),
         DocumentType.image,
       );
 
@@ -111,7 +148,8 @@ class UploadScreen extends StatelessWidget {
               accent: AppAccents.coral.fill,
               icon: Icons.document_scanner_rounded,
               title: 'Scan notes',
-              subtitle: 'Extract text from clear printed English notes.',
+              subtitle:
+                  'Best for clear printed English text. Handwriting may be inaccurate.',
               badge: const StatusBadge(label: 'Ready', tone: BadgeTone.success),
               onTap: () => _scanNotes(context),
             ),

@@ -149,16 +149,22 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.lock_outline_rounded,
-                      size: 15, color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    widget.args.type == DocumentType.image
+                        ? Icons.info_outline_rounded
+                        : Icons.lock_outline_rounded,
+                    size: 15,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       widget.args.type == DocumentType.image
-                          ? 'Text recognized on your device. Works best with '
-                              'clear printed English text — Sinhala and Tamil '
-                              'are not supported yet. First-time setup may need '
-                              'Google Play Services once.'
+                          ? 'OCR can be inaccurate for handwriting. Please '
+                              'review and edit the text before creating a '
+                              'workspace. Works best with clear printed English '
+                              'text — Sinhala and Tamil are not supported yet. '
+                              'Images are processed on your device.'
                           : 'Imported and processed on your device. Nothing is '
                               'uploaded.',
                       style: theme.textTheme.bodySmall,
