@@ -177,18 +177,3 @@ lib/
 android/app/src/main/kotlin/.../GenAiBridge.kt   # on-device AI bridge
 docs/            architecture, user-flow, zero-cost, firebase-setup, screenshots
 ```
-
-## Limitations & future work
-
-- **On-device AI** is verified to fall back to the mock on the emulator; real
-  Gemini Nano inference requires a supported device.
-- **PDF upload and OCR** (scan handwritten notes) are stubbed as "coming soon".
-- Quiz **short-answer grading** is an approximate keyword match.
-- Possible next steps: PDF/OCR import, spaced-repetition flashcards,
-  export/share, and a GitHub Pages landing page.
-
-## Author
-
-Built by **Kausian** as a zero-cost, offline-first Flutter + Kotlin portfolio
-project demonstrating on-device AI architecture, local-first data, and clean
-state management.
