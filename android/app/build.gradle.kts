@@ -21,8 +21,9 @@ android {
         applicationId = "com.gurukula.gurukula_ai"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        // Firebase Auth requires minSdk 23; keep Flutter's default if it is higher.
-        minSdk = maxOf(23, flutter.minSdkVersion)
+        // Firebase Auth needs minSdk 23; ML Kit GenAI (Phase 16A on-device AI
+        // availability check) needs minSdk 26. Keep Flutter's default if higher.
+        minSdk = maxOf(26, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -53,4 +54,10 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // ML Kit GenAI (Gemini Nano via AICore). Phase 16A uses only the
+    // availability check (checkFeatureStatus); generation stays on the mock.
+    implementation("com.google.mlkit:genai-summarization:1.0.0-beta1")
 }
