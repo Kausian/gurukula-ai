@@ -159,12 +159,12 @@ class ProfileScreen extends ConsumerWidget {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
-                  _StatusRow(label: 'Gemini Nano', badge: _aiBadge(aiMode)),
+                  _StatusRow(label: 'On-device AI', badge: _aiBadge(aiMode)),
                   const Divider(height: 1),
                   const _StatusRow(
-                      label: 'Offline AI',
+                      label: 'Fallback mode',
                       badge: StatusBadge(
-                          label: 'Ready', tone: BadgeTone.success)),
+                          label: 'Active', tone: BadgeTone.success)),
                   const Divider(height: 1),
                   const _StatusRow(
                       label: 'Local storage',

@@ -9,7 +9,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // Registers the "gurukula/ai" MethodChannel for on-device AI.
-        genAiBridge = GenAiBridge(flutterEngine)
+        genAiBridge = GenAiBridge(flutterEngine, applicationContext)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
