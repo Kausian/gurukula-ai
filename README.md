@@ -54,7 +54,7 @@ It is built **offline-first**: the full study workflow works without a network c
 
 ---
 
-## ✨ Key features
+## Key features
 
 | Area | What you get |
 |------|--------------|
@@ -73,7 +73,7 @@ It is built **offline-first**: the full study workflow works without a network c
 
 ---
 
-## ⚙️ How it works
+## How it works
 
 1. **Add material** — paste text, import a `.txt`/PDF, pick a gallery image, or scan a page with the camera.
 2. **Extract text** — text files and PDFs are read directly; images run through **on-device OCR** (ML Kit Text Recognition).
@@ -86,7 +86,7 @@ Everything is stored **locally**. Nothing is uploaded to a server.
 
 ---
 
-## 🧱 Tech stack
+## Tech stack
 
 | Layer | Technology |
 |-------|------------|
@@ -101,7 +101,7 @@ Everything is stored **locally**. Nothing is uploaded to a server.
 
 ---
 
-## 🏛️ Architecture overview
+## Architecture overview
 
 ```
 Flutter UI (Riverpod)
@@ -125,15 +125,15 @@ Flutter UI (Riverpod)
 
 ## 🔒 Privacy-first design
 
-- 🗂️ **Your study data stays on your device**, stored locally with **Hive**.
-- 🚫 **No cloud sync, no backend, no analytics of your notes.**
-- 🤖 **No OpenAI API and no cloud Gemini API.** AI runs **on-device** where supported.
-- 🖼️ **OCR is on-device** — images are processed locally and never uploaded.
-- 🔑 **Google Sign-In is identity only**; it does not store or read your study content.
+- **Your study data stays on your device**, stored locally with **Hive**.
+- **No cloud sync, no backend, no analytics of your notes.**
+- **No OpenAI API and no cloud Gemini API.** AI runs **on-device** where supported.
+- **OCR is on-device** — images are processed locally and never uploaded.
+- **Google Sign-In is identity only**; it does not store or read your study content.
 
 ---
 
-## 🧠 On-device AI explanation
+## On-device AI explanation
 
 Gurukula AI is **ready** for on-device generative AI but never **depends** on it:
 
@@ -148,7 +148,7 @@ Gurukula AI is **ready** for on-device generative AI but never **depends** on it
 
 ---
 
-## 🔤 OCR limitations
+## OCR limitations
 
 - ✅ **Works best with clear, printed/typed English text.**
 - ✍️ **Handwriting may be inaccurate** — messy notebook photos can produce poor results.
@@ -157,7 +157,7 @@ Gurukula AI is **ready** for on-device generative AI but never **depends** on it
 
 ---
 
-## 📥 APK installation guide
+## APK installation guide
 
 > Android only.
 
@@ -204,13 +204,9 @@ Gurukula AI is **ready** for on-device generative AI but never **depends** on it
 ## 👨‍💻 Developer
 
 Built by **Kausian** as a real, problem-solving study app for students — not just a demo.
-
-- **GitHub:** [github.com/Kausian/gurukula-ai](https://github.com/Kausian/gurukula-ai)
 - **Feedback / contact:** in-app **“Send feedback”** option (Profile → Settings)
 
 ---
 
 ## License
-
-This project is currently maintained as a personal portfolio project.  
 License details will be added later.
