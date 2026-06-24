@@ -23,13 +23,14 @@ class SummaryAdapter extends TypeAdapter<Summary> {
       detailedSummary: fields[3] as String,
       keyPoints: (fields[4] as List).cast<String>(),
       createdAt: fields[5] as DateTime,
+      generatedOnDevice: fields[6] as bool?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Summary obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class SummaryAdapter extends TypeAdapter<Summary> {
       ..writeByte(4)
       ..write(obj.keyPoints)
       ..writeByte(5)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(6)
+      ..write(obj.generatedOnDevice);
   }
 
   @override

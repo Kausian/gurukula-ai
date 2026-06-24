@@ -3,17 +3,25 @@ import '../data/models/enums.dart';
 /// On-device AI readiness, surfaced in the UI.
 enum AiAvailability { available, downloading, unsupported, mock }
 
+/// Which engine produced a piece of AI content (Phase 16B).
+enum AiSource { onDevice, fallback }
+
 /// A summary produced by an [AiService].
 class AiSummary {
   const AiSummary({
     required this.shortSummary,
     required this.detailedSummary,
     required this.keyPoints,
+    this.source = AiSource.fallback,
   });
 
   final String shortSummary;
   final String detailedSummary;
   final List<String> keyPoints;
+
+  /// Whether this came from real on-device AI or the fallback. Defaults to
+  /// [AiSource.fallback] so the mock and every fallback path are tagged.
+  final AiSource source;
 }
 
 /// A draft flashcard produced by an [AiService] (before it is saved to Hive).

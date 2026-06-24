@@ -154,6 +154,7 @@ class StudyController {
       detailedSummary: aiSummary.detailedSummary,
       keyPoints: aiSummary.keyPoints,
       createdAt: DateTime.now().toUtc(),
+      generatedOnDevice: aiSummary.source == AiSource.onDevice,
     );
     await _ref.read(summaryRepositoryProvider).save(summary);
     await _log(ActivityType.summaryCreated, summary.id, '$resolvedTitle summary');

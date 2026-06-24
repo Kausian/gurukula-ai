@@ -12,6 +12,7 @@ class Summary {
     required this.detailedSummary,
     required this.keyPoints,
     required this.createdAt,
+    this.generatedOnDevice,
   });
 
   @HiveField(0)
@@ -26,4 +27,10 @@ class Summary {
   final List<String> keyPoints;
   @HiveField(5)
   final DateTime createdAt;
+
+  /// Whether this summary was produced by real on-device AI (Phase 16B).
+  /// Nullable so summaries saved before this field existed still load (= source
+  /// unknown, shown as fallback/no badge).
+  @HiveField(6)
+  final bool? generatedOnDevice;
 }

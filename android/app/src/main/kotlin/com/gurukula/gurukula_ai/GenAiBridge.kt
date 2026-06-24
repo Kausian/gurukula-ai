@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.content.ContextCompat
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.summarization.Summarization
+import com.google.mlkit.genai.summarization.SummarizationRequest
 import com.google.mlkit.genai.summarization.SummarizerOptions
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
@@ -39,9 +40,13 @@ class GenAiBridge(
         when (call.method) {
             "checkAvailability" -> checkAvailability(result)
 
-            // No on-device generation yet (Phase 16A is status-only). Signal an
-            // error so the Flutter side uses the MockAiService fallback.
-            "summarize", "proofread", "rewrite" ->
+            // Real on-device summarization when the model is AVAILABLE (Phase
+            // 16B). Any other status / error replies with an error so the
+            // Flutter side uses the MockAiService fallback.
+            "summarize" -> summarize(call.argument<String>("text"), result)
+
+            // Proofread / rewrite generation is not wired yet (summary-only).
+            "proofread", "rewrite" ->
                 result.error(
                     "unavailable",
                     "On-device generation is not enabled yet",
@@ -81,6 +86,56 @@ class GenAiBridge(
         FeatureStatus.DOWNLOADABLE -> "downloadable"
         FeatureStatus.DOWNLOADING -> "downloading"
         else -> "unsupported"
+    }
+
+    /**
+     * Runs real on-device summarization only when the model is AVAILABLE. For
+     * any other status, or on any error, replies with an error so Flutter falls
+     * back to the mock. We never trigger a model download here (Phase 16B).
+     */
+    private fun summarize(text: String?, result: MethodChannel.Result) {
+        if (text.isNullOrBlank()) {
+            result.error("invalid", "No text to summarize", null)
+            return
+        }
+        try {
+            val statusFuture = summarizer.checkFeatureStatus()
+            statusFuture.addListener({
+                val status: Int = try {
+                    statusFuture.get() ?: FeatureStatus.UNAVAILABLE
+                } catch (_: Throwable) {
+                    FeatureStatus.UNAVAILABLE
+                }
+                if (status == FeatureStatus.AVAILABLE) {
+                    runSummarization(text, result)
+                } else {
+                    result.error("unavailable", "On-device model not ready", null)
+                }
+            }, ContextCompat.getMainExecutor(context))
+        } catch (e: Throwable) {
+            result.error("error", e.message, null)
+        }
+    }
+
+    private fun runSummarization(text: String, result: MethodChannel.Result) {
+        try {
+            val request = SummarizationRequest.builder(text).build()
+            val future = summarizer.runInference(request)
+            future.addListener({
+                try {
+                    val summary = future.get()?.summary
+                    if (summary.isNullOrBlank()) {
+                        result.error("empty", "Empty on-device summary", null)
+                    } else {
+                        result.success(summary)
+                    }
+                } catch (e: Throwable) {
+                    result.error("error", e.message, null)
+                }
+            }, ContextCompat.getMainExecutor(context))
+        } catch (e: Throwable) {
+            result.error("error", e.message, null)
+        }
     }
 
     fun dispose() {

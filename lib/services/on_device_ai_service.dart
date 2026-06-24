@@ -27,11 +27,17 @@ class OnDeviceAiService implements AiService {
     }
   }
 
+  /// How long to wait for on-device inference before falling back, so a stuck
+  /// model can never freeze summary creation (Phase 16B).
+  static const Duration _summarizeTimeout = Duration(seconds: 20);
+
   @override
   Future<AiSummary> summarizeText(String text) async {
     try {
-      final result =
-          await _channel.invokeMethod<String>('summarize', {'text': text});
+      final result = await _channel
+          .invokeMethod<String>('summarize', {'text': text}).timeout(
+        _summarizeTimeout,
+      );
       if (result == null || result.trim().isEmpty) {
         return fallback.summarizeText(text);
       }
@@ -44,8 +50,10 @@ class OnDeviceAiService implements AiService {
         shortSummary: points.isNotEmpty ? points.first : result.trim(),
         detailedSummary: result.trim(),
         keyPoints: points,
+        source: AiSource.onDevice,
       );
     } catch (_) {
+      // Unavailable, errored, or timed out → fall back (tagged as fallback).
       return fallback.summarizeText(text);
     }
   }

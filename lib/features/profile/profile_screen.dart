@@ -178,6 +178,8 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 10),
+            _AiStatusHelp(mode: aiMode),
             const SizedBox(height: 28),
 
             // Settings.
@@ -432,6 +434,52 @@ StatusBadge _aiBadge(AsyncValue<AiAvailability> mode) {
       }
     },
   );
+}
+
+/// A short, plain-language explanation under the AI status card (Phase 16B
+/// follow-up), tailored to the current on-device AI availability.
+class _AiStatusHelp extends StatelessWidget {
+  const _AiStatusHelp({required this.mode});
+
+  final AsyncValue<AiAvailability> mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final message = switch (mode.value) {
+      AiAvailability.available =>
+        'On-device AI is available for supported study features.',
+      AiAvailability.downloading =>
+        'On-device AI is preparing. Fallback mode will be used until it is '
+            'ready.',
+      _ => 'On-device AI is not available on this device yet. Gurukula AI '
+          'will continue using fallback mode.',
+    };
+    final secondary =
+        theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(message, style: secondary),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(Icons.lock_outline_rounded,
+                  size: 13, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text('Your study data still stays on your device.',
+                    style: secondary),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// A label-and-badge row used in the AI status card.
