@@ -22,11 +22,13 @@
 
 ## 📖 Overview
 
-**Gurukula AI** helps students study, revise, and build ideas even with **limited internet, privacy concerns, or no access to paid AI tools**. It turns your notes, `.txt` files, text-based PDFs, and photos of printed notes into **summaries, flashcards, quizzes, and project ideas** — and keeps everything **on your device**.
+Gurukula AI is a privacy-first, offline-focused study assistant built for students who want to study smarter without depending on constant internet access, paid AI tools, or cloud-based services.
 
-It is built **offline-first**: the full study workflow works without a network connection. Where the device supports it, Gurukula AI uses **on-device AI (ML Kit GenAI / Gemini Nano)** for real summary generation, and it falls back to a safe built-in generator everywhere else — so the app stays fully usable on **every** supported Android device.
+The app helps students turn pasted notes, .txt files, text-based PDFs, gallery images, and camera-scanned printed notes into useful study materials such as summaries, flashcards, quizzes, revision cards, and project ideas.
 
-> ⚠️ **Honest by design:** Gurukula AI does **not** require Gemini Nano. It *uses ML Kit GenAI / Gemini Nano where supported, with a safe fallback mode for unsupported devices.* No OpenAI API and no cloud Gemini API are used.
+Gurukula AI is designed around a local-first workflow. Study data is stored on the device, OCR runs on-device, and the core study experience remains usable even without a network connection.
+
+Where supported, Gurukula AI uses ML Kit GenAI / Gemini Nano for real on-device summary generation. On unsupported devices, it safely falls back to a built-in local generator so the app remains reliable and usable.
 
 ---
 
