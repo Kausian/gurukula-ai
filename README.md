@@ -1,8 +1,6 @@
 <div align="center">
   <img src="docs/brand/Gurukula-logo.png" width="150" alt="Gurukula AI Logo" />
   <br/>
-  <img src="docs/brand/app-launcher-icon.png" width="90" alt="Gurukula AI App Icon" />
-
   <h1>Gurukula AI</h1>
 
   <p><strong>Study smarter, even when the internet does not help.</strong></p>
