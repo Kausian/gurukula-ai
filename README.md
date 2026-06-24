@@ -159,21 +159,59 @@ Gurukula AI is **ready** for on-device generative AI but never **depends** on it
 
 ---
 
-## APK installation guide
+## 📥 How to Download & Install
 
-> Android only.
+Gurukula AI is currently distributed through GitHub Releases as an Android APK while the app is still in active portfolio development.
 
-1. Build a release APK:
-   ```bash
-   flutter build apk --release
+1. Navigate to the **GitHub Releases** page of this repository.
+
+2. Download the latest `.apk` file, for example:
+
+   ```text
+   gurukula-ai-v1.15.0.apk
    ```
-   The APK is written to `build/app/outputs/flutter-apk/app-release.apk`.
-2. Transfer the APK to your Android phone.
-3. On the phone, allow **“Install unknown apps”** for your file manager / browser.
-4. Open the APK and install.
-5. **Minimum Android version: API 26 (Android 8.0)** — required after the ML Kit GenAI integration.
 
-> Building from source requires the Flutter SDK, an Android toolchain, and a Firebase `google-services.json` for Google Sign-In.
+3. Transfer the APK to your Android device if you downloaded it on a computer.
+
+4. Open the downloaded APK on your Android phone.
+
+5. When prompted, allow your browser or file manager permission to **Install unknown apps**.
+
+6. Follow the Android installer instructions to complete the installation.
+
+> **Minimum Android requirement:** Android 8.0 / API 26 or higher.
+> This is required after the ML Kit GenAI / on-device AI integration.
+
+---
+
+## 🛠️ Build from Source
+
+To build Gurukula AI locally, make sure you have:
+
+* Flutter SDK installed
+* Android Studio / Android SDK configured
+* A connected Android device or emulator
+* Firebase `google-services.json` configured for Google Sign-In
+
+Then run:
+
+```bash
+flutter pub get
+flutter build apk --release
+```
+
+The generated APK will be available at:
+
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+For development testing, run:
+
+```bash
+flutter run
+```
+
 
 ---
 
