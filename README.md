@@ -163,7 +163,7 @@ Gurukula AI is **ready** for on-device generative AI but never **depends** on it
 
 Gurukula AI is currently distributed through GitHub Releases as an Android APK while the app is still in active portfolio development.
 
-1. Navigate to the **GitHub Releases** page of this repository.
+1. Navigate to the [GitHub Releases Page](https://github.com/Kausian/gurukula-ai/releases).
 
 2. Download the latest `.apk` file, for example:
 
