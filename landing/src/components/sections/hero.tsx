@@ -124,11 +124,11 @@ export function Hero({ scrollToSection }: HeroProps) {
                 className="w-full sm:w-auto h-11 bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-lg shadow-violet-600/20 px-6 cursor-pointer"
               >
                 <a
-                  href="https://github.com/Kausian/gurukula-ai"
+                  href="https://github.com/Kausian/gurukula-ai/releases"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Code2 className="w-4 h-4 mr-2" /> View on GitHub
+                  <Code2 className="w-4 h-4 mr-2" /> View Releases
                 </a>
               </Button>
             </motion.div>

@@ -50,11 +50,11 @@ export function CTA() {
         >
           <div className="space-y-1.5">
             <h3 className="text-lg font-bold text-foreground">
-              Explore Gurukula AI on GitHub.
+              Get Gurukula AI from GitHub Releases.
             </h3>
             <p className="text-sm text-muted-foreground">
-              View the project repository for details, source code,
-              documentation, and APK releases.
+              View the project releases and download the latest APK from the
+              GitHub Releases page.
             </p>
           </div>
 
@@ -66,11 +66,11 @@ export function CTA() {
                 className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold h-11 shadow-md shadow-violet-600/15 cursor-pointer"
               >
                 <a
-                  href="https://github.com/Kausian/gurukula-ai"
+                  href="https://github.com/Kausian/gurukula-ai/releases"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Code2 className="w-4 h-4 mr-2" /> View on GitHub
+                  <Code2 className="w-4 h-4 mr-2" /> View Releases
                 </a>
               </Button>
             </motion.div>

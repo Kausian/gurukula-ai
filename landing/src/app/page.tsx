@@ -141,11 +141,11 @@ export default function Home() {
               className="bg-violet-600 text-white hover:bg-violet-500 shadow-md shadow-violet-600/10 text-xs font-semibold cursor-pointer"
             >
               <a
-                href="https://github.com/Kausian/gurukula-ai"
+                href="https://github.com/Kausian/gurukula-ai/releases"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                View on GitHub
+                View Releases
               </a>
             </Button>
           </div>
@@ -197,11 +197,11 @@ export default function Home() {
                   className="w-full bg-violet-600 text-white hover:bg-violet-500 text-xs font-semibold"
                 >
                   <a
-                    href="https://github.com/Kausian/gurukula-ai"
+                    href="https://github.com/Kausian/gurukula-ai/releases"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    View on GitHub
+                    View Releases
                   </a>
                 </Button>
               </div>
