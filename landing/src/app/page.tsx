@@ -136,11 +136,17 @@ export default function Home() {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             <Button
+              asChild
               size="sm"
-              onClick={() => scrollToSection("download")}
               className="bg-violet-600 text-white hover:bg-violet-500 shadow-md shadow-violet-600/10 text-xs font-semibold cursor-pointer"
             >
-              Download APK
+              <a
+                href="https://github.com/Kausian/gurukula-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View on GitHub
+              </a>
             </Button>
           </div>
 
@@ -187,17 +193,16 @@ export default function Home() {
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <Button
-                  variant="outline"
-                  onClick={() => scrollToSection("download")}
-                  className="w-full text-xs font-semibold"
-                >
-                  Learn More
-                </Button>
-                <Button
-                  onClick={() => scrollToSection("download")}
+                  asChild
                   className="w-full bg-violet-600 text-white hover:bg-violet-500 text-xs font-semibold"
                 >
-                  Download App
+                  <a
+                    href="https://github.com/Kausian/gurukula-ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View on GitHub
+                  </a>
                 </Button>
               </div>
             </div>

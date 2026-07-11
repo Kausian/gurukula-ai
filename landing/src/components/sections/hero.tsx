@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { WifiOff, Download, Code2 } from "lucide-react";
+import { WifiOff, Code2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductMockup } from "@/components/product-mockup";
 
@@ -119,21 +119,17 @@ export function Hero({ scrollToSection }: HeroProps) {
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-3"
             >
               <Button
+                asChild
                 size="lg"
-                onClick={() => scrollToSection("download")}
                 className="w-full sm:w-auto h-11 bg-violet-600 hover:bg-violet-500 text-white font-semibold shadow-lg shadow-violet-600/20 px-6 cursor-pointer"
               >
-                <Download className="w-4 h-4 mr-2" /> Download APK
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() =>
-                  window.open("https://github.com/gurukula-ai", "_blank")
-                }
-                className="w-full sm:w-auto h-11 border-border/80 hover:bg-muted font-semibold px-6 cursor-pointer"
-              >
-                <Code2 className="w-4 h-4 mr-2" /> View on GitHub
+                <a
+                  href="https://github.com/Kausian/gurukula-ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Code2 className="w-4 h-4 mr-2" /> View on GitHub
+                </a>
               </Button>
             </motion.div>
           </motion.div>

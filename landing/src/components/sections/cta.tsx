@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Download, Mail, Lock, Code2, Info } from "lucide-react";
+import { Mail, Lock, Code2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { AnimatedText, AnimatedReveal } from "@/components/animated-text";
@@ -50,58 +50,37 @@ export function CTA() {
         >
           <div className="space-y-1.5">
             <h3 className="text-lg font-bold text-foreground">
-              Try Gurukula AI on Android.
+              Explore Gurukula AI on GitHub.
             </h3>
             <p className="text-sm text-muted-foreground">
-              Download the latest APK from the GitHub Releases page and start
-              building your local study library.
+              View the project repository for details, source code,
+              documentation, and APK releases.
             </p>
-            {/* <p className="text-sm text-muted-foreground">You may need to allow <strong className="font-bold text-foreground">Install unknown apps</strong> because this is an early GitHub release build.</p> */}
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="pt-2">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
+                asChild
                 size="lg"
                 className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold h-11 shadow-md shadow-violet-600/15 cursor-pointer"
-                onClick={() =>
-                  window.open("https://gurukula-ai/releases", "_blank")
-                }
               >
-                <Download className="w-4 h-4 mr-2" /> Download Latest APK
+                <a
+                  href="https://github.com/Kausian/gurukula-ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Code2 className="w-4 h-4 mr-2" /> View on GitHub
+                </a>
               </Button>
             </motion.div>
-
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full font-bold h-11 cursor-pointer"
-                onClick={() =>
-                  window.open("https://github.com/gurukula-ai", "_blank")
-                }
-              >
-                <Code2 className="w-4 h-4 mr-2" /> View Project on GitHub
-              </Button>
-            </motion.div>
-
-            {/* <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="ghost"
-                size="lg"
-                className="w-full font-bold h-11 cursor-pointer text-muted-foreground hover:text-foreground"
-                onClick={() => window.open("mailto:hello@gurukula-ai", "_blank")}
-              >
-                <Mail className="w-4 h-4 mr-2" /> Contact Support
-              </Button>
-            </motion.div> */}
           </div>
 
           <div className="flex items-start space-x-2 pt-3 border-t border-border/50 text-left">
             <Info className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-tight">
-              You may need to allow install unknown apps because this is an
-              early GitHub release build.
+              APK releases, documentation, and source code are all available on
+              the GitHub repository.
             </p>
           </div>
         </ScrollReveal>
