@@ -78,10 +78,11 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
       children: [
         if (stale) ...[
           StaleNoticeBanner(
-            message: 'This summary was made before your latest note edits. '
-                'Regenerate to use the current Note.',
+            message: 'You edited this note after this summary was made. '
+                'Regenerate using the latest Note.',
             busy: _busy,
             onRegenerate: _busy ? null : _regenerate,
+            regenerateLabel: 'Regenerate summary',
           ),
           const SizedBox(height: 16),
         ],
@@ -117,8 +118,13 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
           ),
           const SizedBox(height: 6),
         ],
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        // OverflowBar keeps the regenerate action and the copy/share/export
+        // icons on one line when they fit, and stacks them (right-aligned)
+        // when the screen is too narrow, so the row never overflows.
+        OverflowBar(
+          alignment: MainAxisAlignment.end,
+          overflowAlignment: OverflowBarAlignment.end,
+          overflowSpacing: 4,
           children: [
             if (!stale)
               TextButton.icon(
@@ -130,7 +136,7 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
                         child: CircularProgressIndicator(strokeWidth: 2.2),
                       )
                     : const Icon(Icons.refresh_rounded, size: 20),
-                label: const Text('Regenerate'),
+                label: const Text('Regenerate summary'),
               ),
             ShareActions(
               label: 'Summary',

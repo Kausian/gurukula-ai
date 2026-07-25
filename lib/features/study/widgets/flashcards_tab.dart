@@ -74,34 +74,43 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
       children: [
         if (stale) ...[
           StaleNoticeBanner(
-            message: 'These cards were made before your latest note edits. '
-                'Add fresh cards from the current Note — your existing cards '
-                'and revision progress are kept.',
+            message: 'You edited this note after these cards were made. '
+                'Add fresh cards from the latest Note — your old cards and '
+                'revision progress will stay.',
             busy: _busy,
             onRegenerate: _busy ? null : _generate,
             regenerateLabel: 'Add fresh cards',
           ),
           const SizedBox(height: 16),
         ],
-        Row(
+        // OverflowBar keeps the count and actions on one line when they fit,
+        // and stacks them when the screen is too narrow, so the header never
+        // overflows.
+        OverflowBar(
+          alignment: MainAxisAlignment.spaceBetween,
+          overflowSpacing: 8,
           children: [
-            Expanded(
-              child: Text('${cards.length} cards',
-                  style: Theme.of(context).textTheme.titleMedium),
-            ),
-            ShareActions(
-              label: 'Flashcards',
-              fileBaseName:
-                  '${ref.read(documentProvider(widget.documentId))?.title ?? 'Note'} flashcards',
-              buildText: () => ShareFormat.flashcards(
-                ref.read(documentProvider(widget.documentId))?.title ?? 'Note',
-                cards,
-              ),
-            ),
-            TextButton.icon(
-              onPressed: _busy ? null : _generate,
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text('Add more'),
+            Text('${cards.length} cards',
+                style: Theme.of(context).textTheme.titleMedium),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ShareActions(
+                  label: 'Flashcards',
+                  fileBaseName:
+                      '${ref.read(documentProvider(widget.documentId))?.title ?? 'Note'} flashcards',
+                  buildText: () => ShareFormat.flashcards(
+                    ref.read(documentProvider(widget.documentId))?.title ??
+                        'Note',
+                    cards,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _busy ? null : _generate,
+                  icon: const Icon(Icons.add_rounded, size: 20),
+                  label: const Text('Add fresh cards'),
+                ),
+              ],
             ),
           ],
         ),

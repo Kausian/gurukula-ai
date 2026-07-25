@@ -6,6 +6,7 @@ import '../../data/models/enums.dart';
 import '../../data/models/quiz.dart';
 import '../../data/models/quiz_question.dart';
 import '../../data/models/quiz_result.dart';
+import '../../data/models/study_document.dart';
 import '../../data/providers.dart';
 import 'study_providers.dart';
 
@@ -44,7 +45,38 @@ class QuizController {
   Future<String?> generateForDocument(String documentId, {int count = 5}) async {
     final document = _ref.read(documentRepositoryProvider).getById(documentId);
     if (document == null) return null;
+    return _buildQuiz(document, count);
+  }
 
+  /// Regenerates the document's quiz from its current note text (v1.19.0).
+  ///
+  /// Replaces (not appends): the note's existing quiz(zes) are removed first so
+  /// the Library never collects duplicates and the Quiz tab shows a single,
+  /// current quiz. Past [QuizResult]s are intentionally left untouched — they
+  /// are harmless history and deleting them would lose the student's attempts.
+  /// Returns the new quiz id, or null if the note is missing or yields no
+  /// questions (in which case the old quiz is kept).
+  Future<String?> regenerateForDocument(String documentId,
+      {int count = 5}) async {
+    final document = _ref.read(documentRepositoryProvider).getById(documentId);
+    if (document == null) return null;
+
+    final repo = _ref.read(quizRepositoryProvider);
+    final existing =
+        repo.getAll().where((q) => q.documentId == documentId).toList();
+
+    final newId = await _buildQuiz(document, count);
+    if (newId == null) return null; // generation failed — keep the old quiz.
+
+    for (final old in existing) {
+      await repo.delete(old.id);
+    }
+    return newId;
+  }
+
+  /// Builds, saves and returns a fresh quiz for [document], or null when the
+  /// note produced no questions.
+  Future<String?> _buildQuiz(StudyDocument document, int count) async {
     final drafts = await _ref
         .read(aiServiceProvider)
         .generateQuiz(document.cleanedText, count: count);
@@ -53,7 +85,7 @@ class QuizController {
     final quizId = _uuid.v4();
     final quiz = Quiz(
       id: quizId,
-      documentId: documentId,
+      documentId: document.id,
       title: 'Quiz: ${document.title}',
       questions: [
         for (final d in drafts)

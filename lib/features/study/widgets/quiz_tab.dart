@@ -23,6 +23,7 @@ class QuizTab extends ConsumerStatefulWidget {
 class _QuizTabState extends ConsumerState<QuizTab> {
   bool _busy = false;
 
+  /// First-time generation (empty state): just make a quiz.
   Future<void> _generate() async {
     setState(() => _busy = true);
     final id = await ref
@@ -35,6 +36,54 @@ class _QuizTabState extends ConsumerState<QuizTab> {
           const SnackBar(content: Text('Add more text to generate a quiz')),
         );
       }
+    }
+  }
+
+  /// Regenerate: replace the current quiz with a fresh one from the latest
+  /// Note. Confirms first only if the current quiz has already been attempted,
+  /// since its best score won't carry over to the new quiz.
+  Future<void> _regenerate() async {
+    final quiz = ref.read(quizForDocumentProvider(widget.documentId));
+    final hasAttempt =
+        quiz != null && ref.read(bestResultForQuizProvider(quiz.id)) != null;
+
+    if (hasAttempt) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Regenerate quiz?'),
+          content: const Text(
+            'This makes a new quiz from the latest Note and replaces your '
+            'current one. Your best score on the old quiz won\'t carry over.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Keep current'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Regenerate'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
+    setState(() => _busy = true);
+    final id = await ref
+        .read(quizControllerProvider)
+        .regenerateForDocument(widget.documentId);
+    if (mounted) {
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(id == null
+              ? 'Add more text to generate a quiz'
+              : 'Quiz regenerated from the latest Note'),
+        ),
+      );
     }
   }
 
@@ -71,11 +120,11 @@ class _QuizTabState extends ConsumerState<QuizTab> {
       children: [
         if (stale) ...[
           StaleNoticeBanner(
-            message: 'This quiz was made before your latest note edits. '
-                'Make a new quiz from the current Note.',
+            message: 'You edited this note after this quiz was made. '
+                'Regenerate using the latest Note.',
             busy: _busy,
-            onRegenerate: _busy ? null : _generate,
-            regenerateLabel: 'New quiz',
+            onRegenerate: _busy ? null : _regenerate,
+            regenerateLabel: 'Regenerate quiz',
           ),
           const SizedBox(height: 16),
         ],
@@ -141,17 +190,20 @@ class _QuizTabState extends ConsumerState<QuizTab> {
           ),
         ),
         const SizedBox(height: 16),
-        Row(
+        // OverflowBar keeps the badge and the regenerate action on one line
+        // when they fit, and stacks them when the screen is too narrow.
+        OverflowBar(
+          alignment: MainAxisAlignment.spaceBetween,
+          overflowSpacing: 8,
           children: [
             const StatusBadge(
                 label: 'Saved on device',
                 icon: Icons.lock_rounded,
                 tone: BadgeTone.success),
-            const Spacer(),
             TextButton.icon(
-              onPressed: _busy ? null : _generate,
+              onPressed: _busy ? null : _regenerate,
               icon: const Icon(Icons.refresh_rounded, size: 20),
-              label: const Text('New quiz'),
+              label: const Text('Regenerate quiz'),
             ),
           ],
         ),
