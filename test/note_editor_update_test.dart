@@ -131,4 +131,25 @@ void main() {
         '${summaries.single.keyPoints.join(' ')}';
     expect(blob, contains('THIS IS THE UPDATED BODY TEST.'));
   });
+
+  test('favorites toggle persists to the settings box (v1.18.0)', () async {
+    addTearDown(() => Hive.box<dynamic>(HiveBoxes.settings)
+        .delete('favoriteDocIds'));
+
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(favoriteDocIdsProvider.notifier);
+
+    expect(notifier.isFavorite('doc-1'), isFalse);
+    await notifier.toggle('doc-1');
+    expect(container.read(favoriteDocIdsProvider), contains('doc-1'));
+
+    // A fresh container reads the persisted set back from the settings box.
+    final reopened = ProviderContainer();
+    addTearDown(reopened.dispose);
+    expect(reopened.read(favoriteDocIdsProvider), contains('doc-1'));
+
+    await notifier.toggle('doc-1');
+    expect(container.read(favoriteDocIdsProvider), isNot(contains('doc-1')));
+  });
 }

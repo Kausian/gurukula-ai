@@ -17,6 +17,8 @@ import 'rewrite_preview_sheet.dart';
 /// Library: a saved learning space, all stored on device, backed by Hive.
 ///
 /// Phase 12A adds live search, a Rewrites type, and newest/oldest sorting.
+/// v1.18.0 adds note-centric organization: richer note cards (what each note
+/// contains + freshness), favorites, and a note-attribute filter row.
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
@@ -36,6 +38,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     'Ideas',
     'Quizzes',
     'Rewrites',
+  ];
+
+  // Order must match LibraryNoteFilter.values.
+  static const List<String> _noteFilters = [
+    'All notes',
+    'Favorites',
   ];
 
   @override
@@ -67,6 +75,23 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
+  /// Picking a content-type chip clears the note lens, so the two filters never
+  /// fight and produce a confusing empty list.
+  void _onTypeSelected(int index) {
+    ref.read(libraryFilterProvider.notifier).state = index;
+    ref.read(libraryNoteFilterProvider.notifier).state = LibraryNoteFilter.all;
+  }
+
+  /// Picking a note lens (other than "All notes") clears the type chip to All,
+  /// so the note filter reads as an independent lens over notes.
+  void _onNoteFilterSelected(int index) {
+    final value = LibraryNoteFilter.values[index];
+    ref.read(libraryNoteFilterProvider.notifier).state = value;
+    if (value != LibraryNoteFilter.all) {
+      ref.read(libraryFilterProvider.notifier).state = 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -75,6 +100,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final query = ref.watch(librarySearchProvider);
     final sort = ref.watch(librarySortProvider);
     final source = ref.watch(librarySourceProvider);
+    final noteFilter = ref.watch(libraryNoteFilterProvider);
     final allItems = ref.watch(libraryItemsProvider);
 
     final items = filterAndSortLibrary(
@@ -83,6 +109,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       typeIndex: selected,
       sort: sort,
       source: source,
+      noteFilter: noteFilter,
     );
 
     return Scaffold(
@@ -126,10 +153,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               FilterChipRow(
                 labels: _filters,
                 selectedIndex: selected,
-                onSelected: (index) =>
-                    ref.read(libraryFilterProvider.notifier).state = index,
+                onSelected: _onTypeSelected,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 10),
+              FilterChipRow(
+                labels: _noteFilters,
+                selectedIndex: noteFilter.index,
+                onSelected: _onNoteFilterSelected,
+              ),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Text('${items.length} ${items.length == 1 ? 'item' : 'items'}',
@@ -184,15 +216,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               const SizedBox(height: 4),
               Expanded(
                 child: items.isEmpty
-                    ? _emptyState(allItems.isEmpty)
+                    ? _emptyState(allItems.isEmpty, noteFilter, query)
                     : ListView.separated(
                         padding: const EdgeInsets.only(top: 4, bottom: 24),
                         itemCount: items.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) => _LibraryTile(
-                          item: items[index],
-                          onTap: () => _open(items[index]),
-                        ),
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          if (item.category == LibraryCategory.notes) {
+                            return _NoteLibraryTile(
+                              item: item,
+                              onTap: () => _open(item),
+                              onToggleFavorite: () => ref
+                                  .read(favoriteDocIdsProvider.notifier)
+                                  .toggle(item.id),
+                            );
+                          }
+                          return _LibraryTile(
+                            item: item,
+                            onTap: () => _open(item),
+                          );
+                        },
                       ),
               ),
             ],
@@ -217,19 +261,29 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  Widget _emptyState(bool libraryEmpty) {
-    final state = libraryEmpty
-        ? const EmptyState(
-            icon: Icons.folder_open_rounded,
-            title: 'Nothing here yet',
-            message: 'Items you create will appear here, all stored privately '
-                'on your device.',
-          )
-        : const EmptyState(
-            icon: Icons.search_off_rounded,
-            title: 'No matches',
-            message: 'Try a different search or filter.',
-          );
+  Widget _emptyState(
+      bool libraryEmpty, LibraryNoteFilter noteFilter, String query) {
+    late final EmptyState state;
+    if (libraryEmpty) {
+      state = const EmptyState(
+        icon: Icons.folder_open_rounded,
+        title: 'Nothing here yet',
+        message: 'Items you create will appear here, all stored privately '
+            'on your device.',
+      );
+    } else if (noteFilter == LibraryNoteFilter.favorites) {
+      state = const EmptyState(
+        icon: Icons.star_outline_rounded,
+        title: 'No favorites yet',
+        message: 'Tap the star on a note to keep it here for quick access.',
+      );
+    } else {
+      state = const EmptyState(
+        icon: Icons.search_off_rounded,
+        title: 'No matches',
+        message: 'Try a different search or filter.',
+      );
+    }
     // Make the empty state keyboard-safe: when the keyboard shrinks the
     // available height below the content, it scrolls instead of overflowing,
     // and stays vertically centered when there is room.
@@ -241,6 +295,102 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         ),
       ),
     );
+  }
+}
+
+/// A rich note card (v1.18.0): title, preview, metadata, what the note
+/// contains (summary/flashcards/quiz), a freshness flag, and a favorite star.
+class _NoteLibraryTile extends StatelessWidget {
+  const _NoteLibraryTile({
+    required this.item,
+    this.onTap,
+    this.onToggleFavorite,
+  });
+
+  final LibraryItem item;
+  final VoidCallback? onTap;
+  final VoidCallback? onToggleFavorite;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final updated = item.updatedAt ?? item.createdAt;
+
+    final meta = <String>[
+      _sourceName(item.source),
+      'Updated ${timeAgo(updated)}',
+      item.wordCount == 0 ? 'Empty note' : '${item.wordCount} words',
+    ].where((s) => s.isNotEmpty).join('  ·  ');
+
+    return AppCard(
+      onTap: onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          IconChip(
+              icon: Icons.description_rounded,
+              color: AppAccents.lavender.fill,
+              size: 46),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall),
+                if (item.preview.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(item.preview,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant)),
+                ],
+                const SizedBox(height: 6),
+                Text(meta,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall
+                        ?.copyWith(color: scheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            iconSize: 22,
+            visualDensity: VisualDensity.compact,
+            tooltip: item.isFavorite ? 'Unfavorite' : 'Favorite',
+            onPressed: onToggleFavorite,
+            icon: Icon(
+              item.isFavorite
+                  ? Icons.star_rounded
+                  : Icons.star_outline_rounded,
+              color: item.isFavorite
+                  ? AppAccents.lime.fill
+                  : scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _sourceName(LibrarySource? source) {
+    switch (source) {
+      case LibrarySource.pasted:
+        return 'Pasted';
+      case LibrarySource.txt:
+        return 'TXT';
+      case LibrarySource.pdf:
+        return 'PDF';
+      case LibrarySource.image:
+        return 'Scanned';
+      case null:
+        return '';
+    }
   }
 }
 

@@ -12,6 +12,7 @@ LibraryItem _item(
   String title = '',
   String search = '',
   LibrarySource? source,
+  bool isFavorite = false,
 }) =>
     LibraryItem(
       id: id,
@@ -20,6 +21,7 @@ LibraryItem _item(
       createdAt: createdAt,
       source: source,
       searchText: search.toLowerCase(),
+      isFavorite: isFavorite,
     );
 
 void main() {
@@ -102,6 +104,32 @@ void main() {
           sort: LibrarySort.oldest,
           source: LibrarySource.txt);
       expect(result.single.id, 'txt');
+    });
+  });
+
+  group('note lens (v1.18.0, simplified)', () {
+    final notes = [
+      _item('fav', LibraryCategory.notes, DateTime.utc(2026, 1, 1),
+          isFavorite: true),
+      _item('plain', LibraryCategory.notes, DateTime.utc(2026, 1, 2)),
+      // A non-note item that must be excluded by the favorites lens.
+      _item('flashItem', LibraryCategory.flashcards, DateTime.utc(2026, 1, 5),
+          isFavorite: true),
+    ];
+
+    test('all keeps every item (default, backward compatible)', () {
+      final result = filterAndSortLibrary(notes,
+          query: '', typeIndex: 0, sort: LibrarySort.newest);
+      expect(result.length, notes.length);
+    });
+
+    test('favorites keeps only starred notes (excludes non-notes)', () {
+      final result = filterAndSortLibrary(notes,
+          query: '',
+          typeIndex: 0,
+          sort: LibrarySort.newest,
+          noteFilter: LibraryNoteFilter.favorites);
+      expect(result.map((i) => i.id).toList(), ['fav']);
     });
   });
 }

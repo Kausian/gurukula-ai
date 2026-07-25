@@ -185,6 +185,10 @@ enum LibrarySort { newest, oldest }
 /// only show under the "All" filter.
 enum LibrarySource { pasted, txt, pdf, image }
 
+/// Note-centric filter for the Library (v1.18.0). `all` leaves the list
+/// unchanged; `favorites` narrows to starred notes.
+enum LibraryNoteFilter { all, favorites }
+
 class LibraryItem {
   const LibraryItem({
     required this.id,
@@ -195,6 +199,10 @@ class LibraryItem {
     this.source,
     this.sourceFileName,
     this.searchText = '',
+    this.updatedAt,
+    this.preview = '',
+    this.wordCount = 0,
+    this.isFavorite = false,
   });
 
   final String id;
@@ -217,6 +225,22 @@ class LibraryItem {
   /// Lowercased, bounded index of title + file name + a content preview, used
   /// by Library search (Phase 12A).
   final String searchText;
+
+  // --- Note metadata (v1.18.0). Only populated for `notes` items; other
+  // categories keep the safe defaults. ---
+
+  /// When the note was last edited (falls back to createdAt for other items).
+  final DateTime? updatedAt;
+
+  /// A short, single-line snippet of the note body for the card.
+  final String preview;
+
+  /// Word count of the note body.
+  final int wordCount;
+
+  /// Whether the student starred this note (v1.18.0, stored in the settings
+  /// box — not on the Hive document).
+  final bool isFavorite;
 }
 
 /// Derives a [LibrarySource] from the parent document: image type → scanned,
@@ -241,11 +265,57 @@ final librarySortProvider = StateProvider<LibrarySort>((ref) => LibrarySort.newe
 /// Current Library source filter (Phase 12B). Null = All sources.
 final librarySourceProvider = StateProvider<LibrarySource?>((ref) => null);
 
+/// Current note-attribute filter (v1.18.0).
+final libraryNoteFilterProvider =
+    StateProvider<LibraryNoteFilter>((ref) => LibraryNoteFilter.all);
+
+/// Starred note ids, persisted locally in the settings box (v1.18.0).
+///
+/// Kept out of the [StudyDocument] Hive model on purpose: storing a plain list
+/// of ids here means no schema change, no adapter regeneration and no risk to
+/// existing saved notes.
+final favoriteDocIdsProvider =
+    NotifierProvider<FavoriteDocsNotifier, Set<String>>(FavoriteDocsNotifier.new);
+
+class FavoriteDocsNotifier extends Notifier<Set<String>> {
+  static const _key = 'favoriteDocIds';
+
+  Box<dynamic> get _box => Hive.box<dynamic>(HiveBoxes.settings);
+
+  @override
+  Set<String> build() {
+    final raw = _box.get(_key);
+    if (raw is List) return raw.whereType<String>().toSet();
+    return <String>{};
+  }
+
+  bool isFavorite(String docId) => state.contains(docId);
+
+  /// Adds or removes [docId] from favorites and persists the new set.
+  Future<void> toggle(String docId) async {
+    final next = Set<String>.from(state);
+    if (!next.remove(docId)) next.add(docId);
+    state = next;
+    await _box.put(_key, next.toList());
+  }
+}
+
 /// Builds the search index for an item: title + file name + a bounded preview
 /// so search stays fast even for large imported documents.
 String _librarySearchText(String title, String? fileName, String body) {
   final preview = body.length > 500 ? body.substring(0, 500) : body;
   return '$title ${fileName ?? ''} $preview'.toLowerCase();
+}
+
+/// Word count of a note body (v1.18.0).
+int _wordCount(String body) =>
+    body.trim().isEmpty ? 0 : body.trim().split(RegExp(r'\s+')).length;
+
+/// A single-line preview snippet of a note body for the Library card (v1.18.0).
+String _notePreview(String body) {
+  final flat = body.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (flat.length <= 120) return flat;
+  return '${flat.substring(0, 120).trimRight()}…';
 }
 
 /// A short, human-readable title for a rewrite, which has no title of its own.
@@ -272,6 +342,7 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
   final quizzes = ref.watch(quizRepositoryProvider).getAll();
   final rewrites = ref.watch(rewriteRepositoryProvider).getAll();
   final docRepo = ref.watch(documentRepositoryProvider);
+  final favorites = ref.watch(favoriteDocIdsProvider);
 
   final items = <LibraryItem>[
     for (final d in documents)
@@ -283,7 +354,12 @@ final libraryItemsProvider = Provider<List<LibraryItem>>((ref) {
         documentId: d.id,
         source: _sourceOf(d),
         sourceFileName: d.sourceFileName,
-        searchText: _librarySearchText(d.title, d.sourceFileName, d.cleanedText),
+        searchText:
+            _librarySearchText(d.title, d.sourceFileName, d.cleanedText),
+        updatedAt: d.updatedAt,
+        preview: _notePreview(d.cleanedText),
+        wordCount: _wordCount(d.cleanedText),
+        isFavorite: favorites.contains(d.id),
       ),
     for (final s in summaries)
       () {
