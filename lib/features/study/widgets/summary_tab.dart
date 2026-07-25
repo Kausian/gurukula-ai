@@ -6,34 +6,84 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/share_actions.dart';
+import '../../../core/widgets/stale_notice_banner.dart';
 import '../study_providers.dart';
 
 /// Summary tab: short summary, detailed summary and key points.
-class SummaryTab extends ConsumerWidget {
+///
+/// v1.16.0: the summary can be regenerated from the note's current text (the
+/// only generated tab that previously had no regenerate action), and shows a
+/// stale notice when the note was edited after the summary was made.
+class SummaryTab extends ConsumerStatefulWidget {
   const SummaryTab({super.key, required this.documentId});
 
   final String documentId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SummaryTab> createState() => _SummaryTabState();
+}
+
+class _SummaryTabState extends ConsumerState<SummaryTab> {
+  bool _busy = false;
+
+  Future<void> _regenerate() async {
+    setState(() => _busy = true);
+    final ok = await ref
+        .read(studyControllerProvider)
+        .regenerateSummary(widget.documentId);
+    if (mounted) {
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ok ? 'Summary updated' : 'This note could not be found.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final summary = ref.watch(summaryForDocumentProvider(documentId));
+    final summary = ref.watch(summaryForDocumentProvider(widget.documentId));
+    final document = ref.watch(documentProvider(widget.documentId));
 
     if (summary == null) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.summarize_outlined,
         title: 'No summary yet',
-        message: 'This note does not have a summary.',
+        message: 'Generate a summary from this note.',
+        action: FilledButton.icon(
+          onPressed: _busy ? null : _regenerate,
+          icon: _busy
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : const Icon(Icons.auto_awesome_rounded),
+          label: Text(_busy ? 'Generating' : 'Generate summary'),
+        ),
       );
     }
 
-    final docTitle = ref.watch(documentProvider(documentId))?.title ?? 'Note';
-
+    final docTitle = document?.title ?? 'Note';
     final onDevice = summary.generatedOnDevice;
+
+    // Stale when the note was edited after this summary was generated.
+    final stale =
+        document != null && document.updatedAt.isAfter(summary.createdAt);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
+        if (stale) ...[
+          StaleNoticeBanner(
+            message: 'This summary was generated before your latest edits.',
+            busy: _busy,
+            onRegenerate: _busy ? null : _regenerate,
+          ),
+          const SizedBox(height: 16),
+        ],
         // Source indicator on its own line so it can never crowd or overflow
         // against the action icons, even at large system font sizes.
         if (onDevice != null) ...[
@@ -66,13 +116,27 @@ class SummaryTab extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
         ],
-        Align(
-          alignment: Alignment.centerRight,
-          child: ShareActions(
-            label: 'Summary',
-            fileBaseName: '$docTitle summary',
-            buildText: () => ShareFormat.summary(docTitle, summary),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (!stale)
+              TextButton.icon(
+                onPressed: _busy ? null : _regenerate,
+                icon: _busy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2.2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 20),
+                label: const Text('Regenerate'),
+              ),
+            ShareActions(
+              label: 'Summary',
+              fileBaseName: '$docTitle summary',
+              buildText: () => ShareFormat.summary(docTitle, summary),
+            ),
+          ],
         ),
         const SectionHeader(title: 'Short summary'),
         AppCard(

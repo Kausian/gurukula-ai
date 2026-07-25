@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/icon_chip.dart';
+import '../../../core/widgets/stale_notice_banner.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../quiz_providers.dart';
+import '../study_providers.dart';
 
 /// Quiz tab: generate a quiz from the note, then take it.
 class QuizTab extends ConsumerStatefulWidget {
@@ -60,10 +62,22 @@ class _QuizTabState extends ConsumerState<QuizTab> {
     }
 
     final best = ref.watch(bestResultForQuizProvider(quiz.id));
+    final document = ref.watch(documentProvider(widget.documentId));
+    final stale =
+        document != null && document.updatedAt.isAfter(quiz.createdAt);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
+        if (stale) ...[
+          StaleNoticeBanner(
+            message: 'You edited this note after this quiz was generated.',
+            busy: _busy,
+            onRegenerate: _busy ? null : _generate,
+            regenerateLabel: 'New quiz',
+          ),
+          const SizedBox(height: 16),
+        ],
         AppCard(
           color: theme.colorScheme.primary,
           showBorder: false,

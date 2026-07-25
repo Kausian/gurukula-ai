@@ -7,6 +7,7 @@ import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/share_actions.dart';
+import '../../../core/widgets/stale_notice_banner.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../data/models/enums.dart';
 import '../../../data/models/flashcard.dart';
@@ -41,6 +42,13 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
   @override
   Widget build(BuildContext context) {
     final cards = ref.watch(flashcardsForDocumentProvider(widget.documentId));
+    final document = ref.watch(documentProvider(widget.documentId));
+
+    // Stale when the note was edited after the newest card was generated
+    // (cards are sorted oldest-first).
+    final stale = document != null &&
+        cards.isNotEmpty &&
+        document.updatedAt.isAfter(cards.last.createdAt);
 
     if (cards.isEmpty) {
       return EmptyState(
@@ -64,6 +72,15 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
+        if (stale) ...[
+          StaleNoticeBanner(
+            message: 'You edited this note after these cards were generated.',
+            busy: _busy,
+            onRegenerate: _busy ? null : _generate,
+            regenerateLabel: 'Add fresh set',
+          ),
+          const SizedBox(height: 16),
+        ],
         Row(
           children: [
             Expanded(
