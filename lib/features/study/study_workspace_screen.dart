@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'study_providers.dart';
 import 'widgets/flashcards_tab.dart';
@@ -35,6 +36,13 @@ class StudyWorkspaceScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(title, overflow: TextOverflow.ellipsis),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit note',
+              onPressed: () => context.push('/note/$documentId/edit'),
+            ),
+          ],
           bottom: const TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,

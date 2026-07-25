@@ -38,4 +38,27 @@ class StudyDocument {
   final DateTime createdAt;
   @HiveField(8)
   final DateTime updatedAt;
+
+  /// Returns a copy with the given fields replaced. Used by the note editor
+  /// (v1.16.0) to persist title/body edits without touching the Hive schema —
+  /// the field layout is identical, so existing stored notes stay compatible.
+  StudyDocument copyWith({
+    String? title,
+    String? rawText,
+    String? cleanedText,
+    String? sourceFileName,
+    DateTime? updatedAt,
+  }) {
+    return StudyDocument(
+      id: id,
+      userId: userId,
+      title: title ?? this.title,
+      type: type,
+      rawText: rawText ?? this.rawText,
+      cleanedText: cleanedText ?? this.cleanedText,
+      sourceFileName: sourceFileName ?? this.sourceFileName,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

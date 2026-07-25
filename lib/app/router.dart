@@ -16,6 +16,7 @@ import '../features/onboarding/welcome_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shell/main_shell.dart';
 import '../features/study/import_preview_screen.dart';
+import '../features/study/note_editor_screen.dart';
 import '../features/study/paste_text_screen.dart';
 import '../features/study/quiz_screen.dart';
 import '../features/study/revision_screen.dart';
@@ -131,6 +132,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/workspace/:id',
         builder: (context, state) =>
             StudyWorkspaceScreen(documentId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/note/:id/edit',
+        builder: (context, state) =>
+            NoteEditorScreen(documentId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/idea-lab/new',

@@ -162,6 +162,69 @@ class StudyController {
     return docId;
   }
 
+  /// Persists edits to a note's title and body (v1.16.0 note editor).
+  ///
+  /// The edited [body] is cleaned the same way pasted/imported text is, so all
+  /// downstream generation (summaries, flashcards, quizzes, rewrites) keeps
+  /// reading a consistent plain-text [StudyDocument.cleanedText]. An empty title
+  /// falls back to a derived one, matching creation behavior. Existing generated
+  /// content is left untouched — the student can regenerate it from the tabs.
+  /// Returns true if the document existed and was saved.
+  Future<bool> updateDocumentContent({
+    required String documentId,
+    required String title,
+    required String body,
+  }) async {
+    final repo = _ref.read(documentRepositoryProvider);
+    final document = repo.getById(documentId);
+    if (document == null) return false;
+
+    final cleaned = cleanText(body);
+    final resolvedTitle =
+        title.trim().isEmpty ? _deriveTitle(cleaned) : title.trim();
+
+    await repo.save(
+      document.copyWith(
+        title: resolvedTitle,
+        rawText: body,
+        cleanedText: cleaned,
+        updatedAt: DateTime.now().toUtc(),
+      ),
+    );
+    // Belt-and-suspenders: the box.watch stream already refreshes derived
+    // providers, but invalidating here guarantees any cached document read
+    // (e.g. the editor reopened later) sees the saved title and body.
+    _ref.invalidate(documentProvider(documentId));
+    return true;
+  }
+
+  /// Regenerates the summary for a note from its current [StudyDocument.
+  /// cleanedText] (v1.16.0). Overwrites the note's single existing summary in
+  /// place (reusing its id) so the Library never gains a duplicate; creates one
+  /// if the note somehow has none. Returns true if the document existed.
+  Future<bool> regenerateSummary(String documentId) async {
+    final document = _ref.read(documentRepositoryProvider).getById(documentId);
+    if (document == null) return false;
+
+    final repo = _ref.read(summaryRepositoryProvider);
+    final existing = repo.byDocument(documentId);
+    final aiSummary = await _ai.summarizeText(document.cleanedText);
+
+    final summary = Summary(
+      id: existing.isEmpty ? _uuid.v4() : existing.first.id,
+      documentId: documentId,
+      shortSummary: aiSummary.shortSummary,
+      detailedSummary: aiSummary.detailedSummary,
+      keyPoints: aiSummary.keyPoints,
+      createdAt: DateTime.now().toUtc(),
+      generatedOnDevice: aiSummary.source == AiSource.onDevice,
+    );
+    await repo.save(summary);
+    await _log(
+        ActivityType.summaryCreated, summary.id, '${document.title} summary');
+    return true;
+  }
+
   /// Generates and saves flashcards for a document. Returns how many were made.
   Future<int> generateFlashcards(String documentId, {int count = 5}) async {
     final document = _ref.read(documentRepositoryProvider).getById(documentId);
