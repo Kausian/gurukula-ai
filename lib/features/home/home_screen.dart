@@ -11,9 +11,11 @@ import '../../core/widgets/learning_tool_card.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stat_card.dart';
+import '../../core/utils/study_goal_format.dart';
 import '../../data/models/activity_event.dart';
 import '../../data/models/enums.dart';
 import '../../data/providers.dart';
+import '../planner/study_planner_providers.dart';
 
 /// Home dashboard: a colorful, interactive study space backed by local data.
 class HomeScreen extends ConsumerWidget {
@@ -140,6 +142,10 @@ class HomeScreen extends ConsumerWidget {
 
             const SectionHeader(title: 'Revision'),
             const _RevisionSection(),
+            const SizedBox(height: 28),
+
+            const SectionHeader(title: 'Study Planner'),
+            const _PlannerSection(),
             const SizedBox(height: 28),
 
             ChallengeCard(
@@ -320,6 +326,90 @@ class _RevisionSection extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Home Study Planner summary (v1.20.0): the next upcoming goal with days
+/// remaining, or a nudge to create one. Tapping opens the full planner.
+class _PlannerSection extends ConsumerWidget {
+  const _PlannerSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final goals = ref.watch(studyGoalsProvider);
+    final next = ref.watch(nextStudyGoalProvider);
+
+    if (goals.isEmpty) {
+      return AppCard(
+        onTap: () => context.push('/planner'),
+        child: Row(
+          children: [
+            IconChip(
+                icon: Icons.event_note_rounded, color: AppAccents.sky.fill),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Plan your exams', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 3),
+                  Text('Add a study goal to track days left and readiness.',
+                      style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
+      );
+    }
+
+    // Prefer the next upcoming goal; if all are past, show the soonest overall.
+    final goal = next ?? goals.first;
+    final overdue = StudyGoalTime.isOverdue(goal.targetDate);
+    final remaining = StudyGoalTime.remainingLabel(goal.targetDate);
+
+    return AppCard(
+      onTap: () => context.push('/planner'),
+      child: Row(
+        children: [
+          IconChip(icon: Icons.event_note_rounded, color: AppAccents.sky.fill),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (goal.subject.isNotEmpty) ...[
+                  Text(goal.subject,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant)),
+                  const SizedBox(height: 2),
+                ],
+                Text(goal.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall),
+                const SizedBox(height: 3),
+                Text(overdue ? 'Target date passed' : 'Next up',
+                    style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            remaining,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: overdue ? AppAccents.coral.fill : theme.colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

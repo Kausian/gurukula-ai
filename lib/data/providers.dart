@@ -13,6 +13,7 @@ import 'models/quiz.dart';
 import 'models/quiz_result.dart';
 import 'models/rewrite.dart';
 import 'models/study_document.dart';
+import 'models/study_goal.dart';
 import 'models/summary.dart';
 import 'models/user_profile.dart';
 import 'repositories/activity_repository.dart';
@@ -23,6 +24,7 @@ import 'repositories/profile_repository.dart';
 import 'repositories/quiz_repository.dart';
 import 'repositories/quiz_result_repository.dart';
 import 'repositories/rewrite_repository.dart';
+import 'repositories/study_goal_repository.dart';
 import 'repositories/summary_repository.dart';
 
 // ---------------------------------------------------------------------------
@@ -65,6 +67,10 @@ final activityRepositoryProvider = Provider<ActivityRepository>(
   (ref) => ActivityRepository(Hive.box<ActivityEvent>(HiveBoxes.activity)),
 );
 
+final studyGoalRepositoryProvider = Provider<StudyGoalRepository>(
+  (ref) => StudyGoalRepository(Hive.box<StudyGoal>(HiveBoxes.studyGoals)),
+);
+
 // ---------------------------------------------------------------------------
 // Reactivity: emits whenever any study-data box changes, so the derived
 // providers and the Study Workspace rebuild automatically after writes.
@@ -81,6 +87,7 @@ final dataChangesProvider = StreamProvider<int>((ref) {
     ref.watch(quizRepositoryProvider).box,
     ref.watch(quizResultRepositoryProvider).box,
     ref.watch(activityRepositoryProvider).box,
+    ref.watch(studyGoalRepositoryProvider).box,
   ];
   final controller = StreamController<int>();
   // Emit a distinct, incrementing value per change so watchers always rebuild

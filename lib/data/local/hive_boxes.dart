@@ -14,6 +14,7 @@ class HiveBoxes {
   static const String quizzes = 'quizzes';
   static const String quizResults = 'quizResults';
   static const String activity = 'activity';
+  static const String studyGoals = 'studyGoals';
 
   /// Small key/value box for app flags (e.g. whether sample data was seeded).
   static const String settings = 'settings';

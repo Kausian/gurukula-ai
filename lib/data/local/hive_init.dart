@@ -8,6 +8,7 @@ import '../models/quiz.dart';
 import '../models/quiz_result.dart';
 import '../models/rewrite.dart';
 import '../models/study_document.dart';
+import '../models/study_goal.dart';
 import '../models/summary.dart';
 import '../models/user_profile.dart';
 import 'hive_boxes.dart';
@@ -32,6 +33,7 @@ Future<void> initHive() async {
     Hive.openBox<Quiz>(HiveBoxes.quizzes),
     Hive.openBox<QuizResult>(HiveBoxes.quizResults),
     Hive.openBox<ActivityEvent>(HiveBoxes.activity),
+    Hive.openBox<StudyGoal>(HiveBoxes.studyGoals),
     Hive.openBox<dynamic>(HiveBoxes.settings),
   ]);
 }

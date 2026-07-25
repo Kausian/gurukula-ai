@@ -12,6 +12,7 @@ import 'package:gurukula_ai/data/models/quiz_question.dart';
 import 'package:gurukula_ai/data/models/quiz_result.dart';
 import 'package:gurukula_ai/data/models/rewrite.dart';
 import 'package:gurukula_ai/data/models/study_document.dart';
+import 'package:gurukula_ai/data/models/study_goal.dart';
 import 'package:gurukula_ai/data/models/summary.dart';
 import 'package:gurukula_ai/data/models/user_profile.dart';
 
@@ -30,6 +31,8 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(RewriteAdapter());
     registerAdapter(RewriteToneAdapter());
     registerAdapter(StudyDocumentAdapter());
+    registerAdapter(StudyGoalAdapter());
+    registerAdapter(StudyGoalStatusAdapter());
     registerAdapter(SummaryAdapter());
     registerAdapter(UserProfileAdapter());
   }
@@ -50,6 +53,8 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(RewriteAdapter());
     registerAdapter(RewriteToneAdapter());
     registerAdapter(StudyDocumentAdapter());
+    registerAdapter(StudyGoalAdapter());
+    registerAdapter(StudyGoalStatusAdapter());
     registerAdapter(SummaryAdapter());
     registerAdapter(UserProfileAdapter());
   }

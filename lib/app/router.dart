@@ -11,6 +11,8 @@ import '../features/idea_lab/idea_form_screen.dart';
 import '../features/idea_lab/idea_lab_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/onboarding/create_profile_screen.dart';
+import '../features/planner/study_goal_form_screen.dart';
+import '../features/planner/study_planner_screen.dart';
 import '../features/onboarding/splash_screen.dart';
 import '../features/onboarding/welcome_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -141,6 +143,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/idea-lab/new',
         builder: (context, state) => const IdeaFormScreen(),
+      ),
+      // Study Planner (v1.20.0).
+      GoRoute(
+        path: '/planner',
+        builder: (context, state) => const StudyPlannerScreen(),
+      ),
+      GoRoute(
+        path: '/planner/new',
+        builder: (context, state) => const StudyGoalFormScreen(),
+      ),
+      GoRoute(
+        path: '/planner/:id/edit',
+        builder: (context, state) =>
+            StudyGoalFormScreen(goalId: state.pathParameters['id']),
       ),
       GoRoute(
         path: '/idea/:id',
