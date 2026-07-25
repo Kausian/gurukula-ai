@@ -71,7 +71,8 @@ class _QuizTabState extends ConsumerState<QuizTab> {
       children: [
         if (stale) ...[
           StaleNoticeBanner(
-            message: 'You edited this note after this quiz was generated.',
+            message: 'This quiz was made before your latest note edits. '
+                'Make a new quiz from the current Note.',
             busy: _busy,
             onRegenerate: _busy ? null : _generate,
             regenerateLabel: 'New quiz',

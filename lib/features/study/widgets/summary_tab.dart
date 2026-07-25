@@ -78,7 +78,8 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
       children: [
         if (stale) ...[
           StaleNoticeBanner(
-            message: 'This summary was generated before your latest edits.',
+            message: 'This summary was made before your latest note edits. '
+                'Regenerate to use the current Note.',
             busy: _busy,
             onRegenerate: _busy ? null : _regenerate,
           ),

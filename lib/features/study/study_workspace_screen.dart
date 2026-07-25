@@ -4,12 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import 'study_providers.dart';
 import 'widgets/flashcards_tab.dart';
+import 'widgets/note_tab.dart';
 import 'widgets/quiz_tab.dart';
 import 'widgets/summary_tab.dart';
 import 'widgets/tools_tab.dart';
 
-/// The Study Workspace: one screen per document, with Summary, Tools and
-/// Flashcards tabs. This is the heart of the study flow.
+/// The Study Workspace: one screen per document, with Note, Summary, Tools,
+/// Flashcards and Quiz tabs. This is the heart of the study flow. The Note tab
+/// (v1.17.0) leads, so opening a note shows its latest saved content first.
 class StudyWorkspaceScreen extends ConsumerWidget {
   const StudyWorkspaceScreen({super.key, required this.documentId});
 
@@ -32,7 +34,7 @@ class StudyWorkspaceScreen extends ConsumerWidget {
     }
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(title, overflow: TextOverflow.ellipsis),
@@ -47,6 +49,7 @@ class StudyWorkspaceScreen extends ConsumerWidget {
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: [
+              Tab(text: 'Note'),
               Tab(text: 'Summary'),
               Tab(text: 'Tools'),
               Tab(text: 'Flashcards'),
@@ -56,6 +59,7 @@ class StudyWorkspaceScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
+            NoteTab(documentId: documentId),
             SummaryTab(documentId: documentId),
             ToolsTab(documentId: documentId),
             FlashcardsTab(documentId: documentId),

@@ -74,6 +74,32 @@ void main() {
     expect(doc.rawText, contains('THIS IS THE UPDATED BODY TEST.'));
   });
 
+  test('documentProvider (read by the Note tab) reflects edits after saving',
+      () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(studyControllerProvider);
+
+    final id = await controller.createDocumentFromText(
+      title: 'Old title',
+      text: 'Old body content.',
+    );
+    // Prime the reactive provider the Note tab watches.
+    expect(container.read(documentProvider(id))!.title, 'Old title');
+
+    await controller.updateDocumentContent(
+      documentId: id,
+      title: 'New title',
+      body: 'THIS IS THE UPDATED BODY TEST.',
+    );
+
+    // The Note tab reads document.cleanedText from this provider; it must be
+    // the freshly saved content (updateDocumentContent invalidates it).
+    final live = container.read(documentProvider(id))!;
+    expect(live.title, 'New title');
+    expect(live.cleanedText, contains('THIS IS THE UPDATED BODY TEST.'));
+  });
+
   test('regenerateSummary rebuilds the summary from the updated body in place',
       () async {
     final container = ProviderContainer();

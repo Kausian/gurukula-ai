@@ -74,10 +74,12 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
       children: [
         if (stale) ...[
           StaleNoticeBanner(
-            message: 'You edited this note after these cards were generated.',
+            message: 'These cards were made before your latest note edits. '
+                'Add fresh cards from the current Note — your existing cards '
+                'and revision progress are kept.',
             busy: _busy,
             onRegenerate: _busy ? null : _generate,
-            regenerateLabel: 'Add fresh set',
+            regenerateLabel: 'Add fresh cards',
           ),
           const SizedBox(height: 16),
         ],
