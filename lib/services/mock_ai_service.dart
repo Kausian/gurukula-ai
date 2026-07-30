@@ -1,11 +1,14 @@
 import '../core/utils/text_clean.dart';
 import '../data/models/enums.dart';
 import 'ai_service.dart';
+import 'local_generation.dart';
 
 /// A deterministic, offline stand-in for on-device AI.
 ///
-/// Uses simple text heuristics so the whole study flow works before real
-/// Gemini Nano integration (Phase 5). Outputs are intentionally lightweight.
+/// Delegates study-material generation to [LocalGeneration] (v1.24.0), which
+/// does the real rule-based text analysis. This service just adds a small UI
+/// delay so loading states are visible. It powers the fallback path used
+/// wherever on-device AI is unavailable.
 class MockAiService implements AiService {
   const MockAiService();
 
@@ -16,52 +19,18 @@ class MockAiService implements AiService {
   Future<AiAvailability> checkAvailability() async => AiAvailability.mock;
 
   @override
-  Future<AiSummary> summarizeText(String text) async {
+  Future<AiSummary> summarizeText(String text,
+      {SummaryLength length = SummaryLength.medium}) async {
     await Future<void>.delayed(_delay);
-    final sentences = splitSentences(text);
-    if (sentences.isEmpty) {
-      return const AiSummary(
-        shortSummary: 'No text to summarize yet.',
-        detailedSummary: 'Add some notes to generate a summary.',
-        keyPoints: [],
-      );
-    }
-
-    final shortSummary = sentences.first;
-    final detailedSummary = sentences.take(3).join(' ');
-    final keyPoints = sentences
-        .take(5)
-        .map((s) => firstWords(s, 12))
-        .map((s) => s.endsWith('.') ? s.substring(0, s.length - 1) : s)
-        .toList();
-
-    return AiSummary(
-      shortSummary: shortSummary,
-      detailedSummary: detailedSummary,
-      keyPoints: keyPoints,
-    );
+    return LocalGeneration.summarize(text, length: length);
   }
 
   @override
   Future<List<AiFlashcardDraft>> generateFlashcards(String text,
-      {int count = 5}) async {
+      {int count = 5,
+      FlashcardStyle style = FlashcardStyle.quickRevision}) async {
     await Future<void>.delayed(_delay);
-    final sentences = splitSentences(text);
-    const difficulties = Difficulty.values;
-    final drafts = <AiFlashcardDraft>[];
-
-    for (var i = 0; i < sentences.length && drafts.length < count; i++) {
-      final sentence = sentences[i];
-      final topic = firstWords(sentence, 6);
-      drafts.add(
-        AiFlashcardDraft(
-          question: 'Explain: $topic',
-          answer: sentence,
-          difficulty: difficulties[i % difficulties.length],
-        ),
-      );
-    }
-    return drafts;
+    return LocalGeneration.flashcards(text, count: count, style: style);
   }
 
   @override
@@ -98,84 +67,10 @@ class MockAiService implements AiService {
   }
 
   @override
-  Future<List<AiQuizQuestion>> generateQuiz(String text, {int count = 5}) async {
+  Future<List<AiQuizQuestion>> generateQuiz(String text,
+      {int count = 5, QuizDifficulty difficulty = QuizDifficulty.medium}) async {
     await Future<void>.delayed(_delay);
-    final sentences = splitSentences(text);
-    if (sentences.isEmpty) return const [];
-
-    // Pool of candidate key words from across the notes.
-    final pool = <String>{};
-    for (final s in sentences) {
-      pool.addAll(_contentWords(s));
-    }
-    final distractorPool = pool.toList();
-    final questions = <AiQuizQuestion>[];
-
-    // Cloze (fill-in-the-blank) multiple-choice questions.
-    for (var i = 0;
-        i < sentences.length && questions.length < count - 2;
-        i++) {
-      final words = _contentWords(sentences[i])
-        ..sort((a, b) => b.length.compareTo(a.length));
-      if (words.isEmpty) continue;
-      final answer = words.first;
-      final distractors = distractorPool
-          .where((w) => w.toLowerCase() != answer.toLowerCase())
-          .toList();
-      if (distractors.length < 3) continue;
-
-      final options = <String>{answer};
-      var d = i;
-      while (options.length < 4 && d < i + distractors.length) {
-        options.add(distractors[d % distractors.length]);
-        d++;
-      }
-      questions.add(
-        AiQuizQuestion(
-          type: QuestionType.multipleChoice,
-          prompt: 'Fill in the blank: ${sentences[i].replaceFirst(answer, '_____')}',
-          options: options.toList()..sort(),
-          correctAnswer: answer,
-          explanation: 'From your notes: "${sentences[i]}"',
-        ),
-      );
-    }
-
-    // One true/false question.
-    if (questions.length < count) {
-      questions.add(
-        AiQuizQuestion(
-          type: QuestionType.trueFalse,
-          prompt: sentences.first,
-          options: const ['True', 'False'],
-          correctAnswer: 'True',
-          explanation: 'This statement comes directly from your notes.',
-        ),
-      );
-    }
-
-    // One short-answer question.
-    if (questions.length < count && sentences.length > 1) {
-      final s = sentences[sentences.length > 2 ? 2 : 1];
-      questions.add(
-        AiQuizQuestion(
-          type: QuestionType.shortAnswer,
-          prompt: 'In your own words, explain: ${firstWords(s, 6)}',
-          options: const [],
-          correctAnswer: s,
-        ),
-      );
-    }
-
-    return questions.take(count).toList();
-  }
-
-  List<String> _contentWords(String sentence) {
-    return sentence
-        .replaceAll(RegExp(r'[^A-Za-z ]'), '')
-        .split(' ')
-        .where((w) => w.length > 4)
-        .toList();
+    return LocalGeneration.quiz(text, count: count, difficulty: difficulty);
   }
 
   @override

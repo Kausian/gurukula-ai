@@ -10,8 +10,10 @@ import '../../../core/widgets/icon_chip.dart';
 import '../../../core/widgets/share_actions.dart';
 import '../../../core/widgets/stale_notice_banner.dart';
 import '../../../core/widgets/status_badge.dart';
+import '../../../services/ai_service.dart';
 import '../quiz_providers.dart';
 import '../study_providers.dart';
+import 'generation_options.dart';
 
 /// Quiz tab: generate a quiz from the note, then take it.
 class QuizTab extends ConsumerStatefulWidget {
@@ -25,13 +27,27 @@ class QuizTab extends ConsumerStatefulWidget {
 
 class _QuizTabState extends ConsumerState<QuizTab> {
   bool _busy = false;
+  QuizDifficulty _difficulty = QuizDifficulty.medium;
+
+  Widget _difficultyChips() => OptionChips<QuizDifficulty>(
+        label: 'Quiz difficulty',
+        options: QuizDifficulty.values,
+        selected: _difficulty,
+        enabled: !_busy,
+        labelOf: (d) => switch (d) {
+          QuizDifficulty.easy => 'Easy',
+          QuizDifficulty.medium => 'Medium',
+          QuizDifficulty.hard => 'Hard',
+        },
+        onSelected: (d) => setState(() => _difficulty = d),
+      );
 
   /// First-time generation (empty state): just make a quiz.
   Future<void> _generate() async {
     setState(() => _busy = true);
     final id = await ref
         .read(quizControllerProvider)
-        .generateForDocument(widget.documentId);
+        .generateForDocument(widget.documentId, difficulty: _difficulty);
     if (mounted) {
       setState(() => _busy = false);
       if (id == null) {
@@ -77,7 +93,7 @@ class _QuizTabState extends ConsumerState<QuizTab> {
     setState(() => _busy = true);
     final id = await ref
         .read(quizControllerProvider)
-        .regenerateForDocument(widget.documentId);
+        .regenerateForDocument(widget.documentId, difficulty: _difficulty);
     if (mounted) {
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,15 +116,22 @@ class _QuizTabState extends ConsumerState<QuizTab> {
         icon: Icons.quiz_outlined,
         title: 'No quiz yet',
         message: 'Generate a quiz to test yourself on this note.',
-        action: FilledButton.icon(
-          onPressed: _busy ? null : _generate,
-          icon: _busy
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.5))
-              : const Icon(Icons.auto_awesome_rounded),
-          label: Text(_busy ? 'Generating' : 'Generate quiz'),
+        action: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _difficultyChips(),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _busy ? null : _generate,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.5))
+                  : const Icon(Icons.auto_awesome_rounded),
+              label: Text(_busy ? 'Generating' : 'Generate quiz'),
+            ),
+          ],
         ),
       );
     }
@@ -121,6 +144,8 @@ class _QuizTabState extends ConsumerState<QuizTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
+        _difficultyChips(),
+        const SizedBox(height: 16),
         if (stale) ...[
           StaleNoticeBanner(
             message: 'You edited this note after this quiz was made. '

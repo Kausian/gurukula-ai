@@ -32,14 +32,15 @@ class OnDeviceAiService implements AiService {
   static const Duration _summarizeTimeout = Duration(seconds: 20);
 
   @override
-  Future<AiSummary> summarizeText(String text) async {
+  Future<AiSummary> summarizeText(String text,
+      {SummaryLength length = SummaryLength.medium}) async {
     try {
       final result = await _channel
           .invokeMethod<String>('summarize', {'text': text}).timeout(
         _summarizeTimeout,
       );
       if (result == null || result.trim().isEmpty) {
-        return fallback.summarizeText(text);
+        return fallback.summarizeText(text, length: length);
       }
       final points = result
           .split('\n')
@@ -54,15 +55,15 @@ class OnDeviceAiService implements AiService {
       );
     } catch (_) {
       // Unavailable, errored, or timed out → fall back (tagged as fallback).
-      return fallback.summarizeText(text);
+      return fallback.summarizeText(text, length: length);
     }
   }
 
   @override
   Future<List<AiFlashcardDraft>> generateFlashcards(String text,
-      {int count = 5}) {
+      {int count = 5, FlashcardStyle style = FlashcardStyle.quickRevision}) {
     // ML Kit GenAI has no flashcard API, so this always uses the fallback.
-    return fallback.generateFlashcards(text, count: count);
+    return fallback.generateFlashcards(text, count: count, style: style);
   }
 
   @override
@@ -92,8 +93,9 @@ class OnDeviceAiService implements AiService {
   }
 
   @override
-  Future<List<AiQuizQuestion>> generateQuiz(String text, {int count = 5}) =>
-      fallback.generateQuiz(text, count: count);
+  Future<List<AiQuizQuestion>> generateQuiz(String text,
+          {int count = 5, QuizDifficulty difficulty = QuizDifficulty.medium}) =>
+      fallback.generateQuiz(text, count: count, difficulty: difficulty);
 
   // Idea Lab has no on-device model API, so these use the fallback directly.
 

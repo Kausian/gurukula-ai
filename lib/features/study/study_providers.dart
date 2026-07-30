@@ -202,13 +202,15 @@ class StudyController {
   /// cleanedText] (v1.16.0). Overwrites the note's single existing summary in
   /// place (reusing its id) so the Library never gains a duplicate; creates one
   /// if the note somehow has none. Returns true if the document existed.
-  Future<bool> regenerateSummary(String documentId) async {
+  Future<bool> regenerateSummary(String documentId,
+      {SummaryLength length = SummaryLength.medium}) async {
     final document = _ref.read(documentRepositoryProvider).getById(documentId);
     if (document == null) return false;
 
     final repo = _ref.read(summaryRepositoryProvider);
     final existing = repo.byDocument(documentId);
-    final aiSummary = await _ai.summarizeText(document.cleanedText);
+    final aiSummary =
+        await _ai.summarizeText(document.cleanedText, length: length);
 
     final summary = Summary(
       id: existing.isEmpty ? _uuid.v4() : existing.first.id,
@@ -226,12 +228,14 @@ class StudyController {
   }
 
   /// Generates and saves flashcards for a document. Returns how many were made.
-  Future<int> generateFlashcards(String documentId, {int count = 5}) async {
+  Future<int> generateFlashcards(String documentId,
+      {int count = 5,
+      FlashcardStyle style = FlashcardStyle.quickRevision}) async {
     final document = _ref.read(documentRepositoryProvider).getById(documentId);
     if (document == null) return 0;
 
-    final drafts =
-        await _ai.generateFlashcards(document.cleanedText, count: count);
+    final drafts = await _ai.generateFlashcards(document.cleanedText,
+        count: count, style: style);
     final now = DateTime.now().toUtc();
     final repo = _ref.read(flashcardRepositoryProvider);
 

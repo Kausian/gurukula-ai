@@ -12,7 +12,9 @@ import '../../../core/widgets/stale_notice_banner.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../../../data/models/enums.dart';
 import '../../../data/models/flashcard.dart';
+import '../../../services/ai_service.dart';
 import '../study_providers.dart';
+import 'generation_options.dart';
 
 /// Flashcards tab: generated study cards with flip + reviewed toggle.
 class FlashcardsTab extends ConsumerStatefulWidget {
@@ -26,12 +28,13 @@ class FlashcardsTab extends ConsumerStatefulWidget {
 
 class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
   bool _busy = false;
+  FlashcardStyle _style = FlashcardStyle.quickRevision;
 
   Future<void> _generate() async {
     setState(() => _busy = true);
     final count = await ref
         .read(studyControllerProvider)
-        .generateFlashcards(widget.documentId);
+        .generateFlashcards(widget.documentId, style: _style);
     if (mounted) {
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -39,6 +42,18 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
       );
     }
   }
+
+  Widget _styleChips() => OptionChips<FlashcardStyle>(
+        label: 'Flashcard style',
+        options: FlashcardStyle.values,
+        selected: _style,
+        enabled: !_busy,
+        labelOf: (s) => switch (s) {
+          FlashcardStyle.quickRevision => 'Quick revision',
+          FlashcardStyle.examPrep => 'Exam prep',
+        },
+        onSelected: (s) => setState(() => _style = s),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -56,16 +71,23 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
         icon: Icons.style_outlined,
         title: 'No flashcards yet',
         message: 'Generate a set of study cards from this note.',
-        action: FilledButton.icon(
-          onPressed: _busy ? null : _generate,
-          icon: _busy
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
-                )
-              : const Icon(Icons.auto_awesome_rounded),
-          label: Text(_busy ? 'Generating' : 'Generate flashcards'),
+        action: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _styleChips(),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _busy ? null : _generate,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                  : const Icon(Icons.auto_awesome_rounded),
+              label: Text(_busy ? 'Generating' : 'Generate flashcards'),
+            ),
+          ],
         ),
       );
     }
@@ -73,6 +95,8 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
+        _styleChips(),
+        const SizedBox(height: 16),
         if (stale) ...[
           StaleNoticeBanner(
             message: 'You edited this note after these cards were made. '

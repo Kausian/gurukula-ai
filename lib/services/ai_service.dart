@@ -6,6 +6,16 @@ enum AiAvailability { available, downloading, unsupported, mock }
 /// Which engine produced a piece of AI content (Phase 16B).
 enum AiSource { onDevice, fallback }
 
+/// How detailed a generated summary should be (v1.24.0). Plain generation
+/// option — not persisted, so it needs no Hive changes.
+enum SummaryLength { short, medium, detailed }
+
+/// The style of generated flashcards (v1.24.0).
+enum FlashcardStyle { quickRevision, examPrep }
+
+/// The intended difficulty of a generated quiz (v1.24.0).
+enum QuizDifficulty { easy, medium, hard }
+
 /// A summary produced by an [AiService].
 class AiSummary {
   const AiSummary({
@@ -126,15 +136,17 @@ class AiIdea {
 abstract class AiService {
   Future<AiAvailability> checkAvailability();
 
-  Future<AiSummary> summarizeText(String text);
+  Future<AiSummary> summarizeText(String text, {SummaryLength length});
 
-  Future<List<AiFlashcardDraft>> generateFlashcards(String text, {int count});
+  Future<List<AiFlashcardDraft>> generateFlashcards(String text,
+      {int count, FlashcardStyle style});
 
   Future<String> proofreadText(String text);
 
   Future<String> rewriteText(String text, RewriteTone tone);
 
-  Future<List<AiQuizQuestion>> generateQuiz(String text, {int count});
+  Future<List<AiQuizQuestion>> generateQuiz(String text,
+      {int count, QuizDifficulty difficulty});
 
   // ---- Idea Lab ----
 

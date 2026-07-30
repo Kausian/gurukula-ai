@@ -8,7 +8,9 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/share_actions.dart';
 import '../../../core/widgets/stale_notice_banner.dart';
+import '../../../services/ai_service.dart';
 import '../study_providers.dart';
+import 'generation_options.dart';
 
 /// Summary tab: short summary, detailed summary and key points.
 ///
@@ -26,12 +28,13 @@ class SummaryTab extends ConsumerStatefulWidget {
 
 class _SummaryTabState extends ConsumerState<SummaryTab> {
   bool _busy = false;
+  SummaryLength _length = SummaryLength.medium;
 
   Future<void> _regenerate() async {
     setState(() => _busy = true);
     final ok = await ref
         .read(studyControllerProvider)
-        .regenerateSummary(widget.documentId);
+        .regenerateSummary(widget.documentId, length: _length);
     if (mounted) {
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -41,6 +44,19 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
       );
     }
   }
+
+  Widget _lengthChips() => OptionChips<SummaryLength>(
+        label: 'Summary length',
+        options: SummaryLength.values,
+        selected: _length,
+        enabled: !_busy,
+        labelOf: (l) => switch (l) {
+          SummaryLength.short => 'Short',
+          SummaryLength.medium => 'Medium',
+          SummaryLength.detailed => 'Detailed',
+        },
+        onSelected: (l) => setState(() => _length = l),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -53,16 +69,23 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
         icon: Icons.summarize_outlined,
         title: 'No summary yet',
         message: 'Generate a summary from this note.',
-        action: FilledButton.icon(
-          onPressed: _busy ? null : _regenerate,
-          icon: _busy
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
-                )
-              : const Icon(Icons.auto_awesome_rounded),
-          label: Text(_busy ? 'Generating' : 'Generate summary'),
+        action: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _lengthChips(),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _busy ? null : _regenerate,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                  : const Icon(Icons.auto_awesome_rounded),
+              label: Text(_busy ? 'Generating' : 'Generate summary'),
+            ),
+          ],
         ),
       );
     }
@@ -77,6 +100,8 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
+        _lengthChips(),
+        const SizedBox(height: 16),
         if (stale) ...[
           StaleNoticeBanner(
             message: 'You edited this note after this summary was made. '

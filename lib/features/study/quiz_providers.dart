@@ -8,6 +8,7 @@ import '../../data/models/quiz_question.dart';
 import '../../data/models/quiz_result.dart';
 import '../../data/models/study_document.dart';
 import '../../data/providers.dart';
+import '../../services/ai_service.dart';
 import 'study_providers.dart';
 
 /// The most recent quiz for a document (reactive).
@@ -42,10 +43,11 @@ class QuizController {
   String get _userId => _ref.read(currentProfileProvider)?.id ?? 'local';
 
   /// Generates and saves a quiz for a document. Returns the new quiz id.
-  Future<String?> generateForDocument(String documentId, {int count = 5}) async {
+  Future<String?> generateForDocument(String documentId,
+      {int count = 5, QuizDifficulty difficulty = QuizDifficulty.medium}) async {
     final document = _ref.read(documentRepositoryProvider).getById(documentId);
     if (document == null) return null;
-    return _buildQuiz(document, count);
+    return _buildQuiz(document, count, difficulty);
   }
 
   /// Regenerates the document's quiz from its current note text (v1.19.0).
@@ -57,7 +59,7 @@ class QuizController {
   /// Returns the new quiz id, or null if the note is missing or yields no
   /// questions (in which case the old quiz is kept).
   Future<String?> regenerateForDocument(String documentId,
-      {int count = 5}) async {
+      {int count = 5, QuizDifficulty difficulty = QuizDifficulty.medium}) async {
     final document = _ref.read(documentRepositoryProvider).getById(documentId);
     if (document == null) return null;
 
@@ -65,7 +67,7 @@ class QuizController {
     final existing =
         repo.getAll().where((q) => q.documentId == documentId).toList();
 
-    final newId = await _buildQuiz(document, count);
+    final newId = await _buildQuiz(document, count, difficulty);
     if (newId == null) return null; // generation failed — keep the old quiz.
 
     for (final old in existing) {
@@ -76,10 +78,11 @@ class QuizController {
 
   /// Builds, saves and returns a fresh quiz for [document], or null when the
   /// note produced no questions.
-  Future<String?> _buildQuiz(StudyDocument document, int count) async {
+  Future<String?> _buildQuiz(
+      StudyDocument document, int count, QuizDifficulty difficulty) async {
     final drafts = await _ref
         .read(aiServiceProvider)
-        .generateQuiz(document.cleanedText, count: count);
+        .generateQuiz(document.cleanedText, count: count, difficulty: difficulty);
     if (drafts.isEmpty) return null;
 
     final quizId = _uuid.v4();
