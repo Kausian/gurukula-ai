@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/privacy_lock/lock_gate.dart';
 import '../features/settings/settings_providers.dart';
 import 'router.dart';
 import 'theme.dart';
@@ -23,6 +24,9 @@ class GurukulaApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
+      // Overlays the Privacy Lock screen (when enabled) above every route.
+      builder: (context, child) =>
+          LockGate(child: child ?? const SizedBox.shrink()),
     );
   }
 }

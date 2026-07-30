@@ -13,6 +13,7 @@ import '../features/library/library_screen.dart';
 import '../features/onboarding/create_profile_screen.dart';
 import '../features/planner/study_goal_form_screen.dart';
 import '../features/planner/study_planner_screen.dart';
+import '../features/privacy_lock/privacy_lock_settings_screen.dart';
 import '../features/onboarding/splash_screen.dart';
 import '../features/onboarding/welcome_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -157,6 +158,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/planner/:id/edit',
         builder: (context, state) =>
             StudyGoalFormScreen(goalId: state.pathParameters['id']),
+      ),
+      // Privacy Lock settings (v1.21.0).
+      GoRoute(
+        path: '/privacy-lock',
+        builder: (context, state) => const PrivacyLockSettingsScreen(),
       ),
       GoRoute(
         path: '/idea/:id',

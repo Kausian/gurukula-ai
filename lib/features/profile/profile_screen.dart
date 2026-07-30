@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../core/constants/app_constants.dart';
@@ -13,6 +14,7 @@ import '../../core/widgets/status_badge.dart';
 import '../../data/providers.dart';
 import '../../services/ai_service.dart';
 import '../auth/auth_providers.dart';
+import '../privacy_lock/privacy_lock_providers.dart';
 import '../settings/settings_providers.dart';
 import '../study/study_providers.dart';
 
@@ -33,6 +35,8 @@ class ProfileScreen extends ConsumerWidget {
     final aiMode = ref.watch(aiModeProvider);
     final themeMode = ref.watch(themeModeProvider);
     final version = ref.watch(appVersionProvider);
+    final lockEnabled =
+        ref.watch(privacyLockControllerProvider.select((s) => s.enabled));
 
     final name = profile?.username ?? user?.displayName ?? 'Guest student';
     final subtitle = profile == null
@@ -193,6 +197,12 @@ class ProfileScreen extends ConsumerWidget {
                       label: 'Theme',
                       value: _themeLabel(themeMode),
                       onTap: () => _pickTheme(context, ref)),
+                  const Divider(height: 1),
+                  _SettingRow(
+                      icon: Icons.lock_person_rounded,
+                      label: 'Privacy Lock',
+                      value: lockEnabled ? 'On' : 'Off',
+                      onTap: () => context.push('/privacy-lock')),
                   const Divider(height: 1),
                   _SettingRow(
                       icon: Icons.translate_rounded,
