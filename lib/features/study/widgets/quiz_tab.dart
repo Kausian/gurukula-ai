@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/export_filename.dart';
+import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/icon_chip.dart';
+import '../../../core/widgets/share_actions.dart';
 import '../../../core/widgets/stale_notice_banner.dart';
 import '../../../core/widgets/status_badge.dart';
 import '../quiz_providers.dart';
@@ -200,10 +203,27 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                 label: 'Saved on device',
                 icon: Icons.lock_rounded,
                 tone: BadgeTone.success),
-            TextButton.icon(
-              onPressed: _busy ? null : _regenerate,
-              icon: const Icon(Icons.refresh_rounded, size: 20),
-              label: const Text('Regenerate quiz'),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ShareActions(
+                  label: 'Quiz',
+                  fileBaseName: exportFileName(
+                      ref.read(documentProvider(widget.documentId))?.title ??
+                          'Note',
+                      'Quiz'),
+                  buildText: () => ShareFormat.quiz(
+                    ref.read(documentProvider(widget.documentId))?.title ??
+                        'Note',
+                    quiz,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _busy ? null : _regenerate,
+                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                  label: const Text('Regenerate quiz'),
+                ),
+              ],
             ),
           ],
         ),

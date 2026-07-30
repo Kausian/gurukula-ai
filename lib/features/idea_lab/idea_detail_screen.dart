@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/utils/export_filename.dart';
 import '../../core/utils/share_format.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/section_header.dart';
@@ -92,7 +93,7 @@ class _IdeaDetailScreenState extends ConsumerState<IdeaDetailScreen> {
         actions: [
           ShareActions(
             label: 'Idea',
-            fileBaseName: '${idea.title} idea',
+            fileBaseName: exportFileName(idea.title, 'Idea'),
             buildText: () => ShareFormat.idea(idea),
           ),
         ],

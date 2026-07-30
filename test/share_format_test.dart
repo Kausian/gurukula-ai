@@ -143,4 +143,113 @@ void main() {
     expect(text, contains('Formal — via Gurukula AI'));
     expect(text, contains('This is the rewritten text.'));
   });
+
+  // --- v1.23.0 export upgrade ---
+
+  test('note export includes title, body and handles empty notes', () {
+    final text = ShareFormat.note('Biology', 'Cells are the unit of life.',
+        updatedAt: _now);
+    expect(text, contains('NOTE — Biology'));
+    expect(text, contains('via Gurukula AI'));
+    expect(text, contains('Cells are the unit of life.'));
+
+    final empty = ShareFormat.note('Blank', '   ');
+    expect(empty, contains('This note is empty.'));
+  });
+
+  test('quiz content export lists questions with options and answers', () {
+    final quiz = Quiz(
+      id: 'q1',
+      documentId: 'd1',
+      title: 'Pop quiz',
+      questions: [
+        QuizQuestion(
+          id: 'q1a',
+          type: QuestionType.multipleChoice,
+          prompt: 'Capital of France?',
+          options: const ['Paris', 'Rome'],
+          correctAnswer: 'Paris',
+        ),
+      ],
+      createdAt: _now,
+    );
+
+    final text = ShareFormat.quiz('Geography', quiz);
+    expect(text, contains('QUIZ — Geography  (1 questions)'));
+    expect(text, contains('1. Capital of France?'));
+    expect(text, contains('Options: Paris / Rome'));
+    expect(text, contains('Answer: Paris'));
+  });
+
+  test('study pack combines all sections and a privacy note', () {
+    final summary = Summary(
+      id: 's1',
+      documentId: 'd1',
+      shortSummary: 'Short.',
+      detailedSummary: 'Detailed.',
+      keyPoints: const ['Point one'],
+      createdAt: _now,
+    );
+    final cards = [
+      Flashcard(
+        id: 'c1',
+        documentId: 'd1',
+        question: 'Q?',
+        answer: 'A.',
+        difficulty: Difficulty.easy,
+        isReviewed: false,
+        createdAt: _now,
+      ),
+    ];
+    final quiz = Quiz(
+      id: 'q1',
+      documentId: 'd1',
+      title: 'Quiz',
+      questions: [
+        QuizQuestion(
+          id: 'q1a',
+          type: QuestionType.trueFalse,
+          prompt: 'True or false?',
+          options: const ['True', 'False'],
+          correctAnswer: 'True',
+        ),
+      ],
+      createdAt: _now,
+    );
+
+    final text = ShareFormat.studyPack(
+      title: 'Biology',
+      note: 'The source note body.',
+      summary: summary,
+      flashcards: cards,
+      quiz: quiz,
+      exportedAt: _now,
+    );
+
+    expect(text, contains('Gurukula AI Study Export'));
+    expect(text, contains('Title: Biology'));
+    expect(text, contains('Exported:'));
+    expect(text, contains('=== Source Note ==='));
+    expect(text, contains('The source note body.'));
+    expect(text, contains('=== Summary ==='));
+    expect(text, contains('=== Flashcards ==='));
+    expect(text, contains('=== Quiz ==='));
+    expect(text, contains('Privacy Note:'));
+    expect(text, contains('stays on your device'));
+  });
+
+  test('study pack shows placeholders when sections are missing', () {
+    final text = ShareFormat.studyPack(
+      title: 'Empty',
+      note: '',
+      summary: null,
+      flashcards: const [],
+      quiz: null,
+      exportedAt: _now,
+    );
+    expect(text, contains('This note is empty.'));
+    expect(text, contains('No summary yet.'));
+    expect(text, contains('No flashcards yet.'));
+    expect(text, contains('No quiz yet.'));
+  });
 }

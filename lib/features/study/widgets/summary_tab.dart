@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/export_filename.dart';
 import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -140,7 +141,7 @@ class _SummaryTabState extends ConsumerState<SummaryTab> {
               ),
             ShareActions(
               label: 'Summary',
-              fileBaseName: '$docTitle summary',
+              fileBaseName: exportFileName(docTitle, 'Summary'),
               buildText: () => ShareFormat.summary(docTitle, summary),
             ),
           ],

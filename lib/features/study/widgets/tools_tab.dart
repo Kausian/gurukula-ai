@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/export_filename.dart';
 import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/section_header.dart';
@@ -106,7 +107,7 @@ class _ToolsTabState extends ConsumerState<ToolsTab> {
             title: 'Result',
             trailing: ShareActions(
               label: 'Rewrite',
-              fileBaseName: '${_resultLabel ?? 'Rewrite'} rewrite',
+              fileBaseName: exportFileName(_resultLabel ?? 'Rewrite', 'Rewrite'),
               buildText: () =>
                   ShareFormat.rewrite(_resultLabel ?? 'Result', _result ?? ''),
             ),

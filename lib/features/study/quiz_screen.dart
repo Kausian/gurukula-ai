@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../core/utils/export_filename.dart';
 import '../../core/utils/share_format.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/share_actions.dart';
@@ -238,7 +239,7 @@ class _ResultView extends ConsumerWidget {
         actions: [
           ShareActions(
             label: 'Quiz result',
-            fileBaseName: '$docTitle quiz result',
+            fileBaseName: exportFileName(docTitle, 'Quiz result'),
             buildText: () => ShareFormat.quizResult(
               docTitle,
               quiz,

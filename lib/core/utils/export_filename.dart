@@ -16,3 +16,16 @@ String sanitizeFileName(
   if (name.length > maxLength) name = name.substring(0, maxLength).trim();
   return name.isEmpty ? fallback : name;
 }
+
+/// Builds a readable, dated export file-name stem (no extension) from a
+/// content [title], a content [type] label and an optional [date] (v1.23.0).
+///
+/// Example: `exportFileName('Biology: Cells', 'Summary')` →
+/// `"Biology Cells Summary 2026-07-26"` (illegal characters removed).
+String exportFileName(String title, String type, {DateTime? date}) {
+  final d = (date ?? DateTime.now()).toLocal();
+  String two(int v) => v.toString().padLeft(2, '0');
+  final stamp = '${d.year}-${two(d.month)}-${two(d.day)}';
+  final base = title.trim().isEmpty ? 'Gurukula' : title.trim();
+  return sanitizeFileName('$base $type $stamp');
+}

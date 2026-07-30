@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/utils/export_filename.dart';
 import '../../../core/utils/share_format.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -97,8 +98,10 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
               children: [
                 ShareActions(
                   label: 'Flashcards',
-                  fileBaseName:
-                      '${ref.read(documentProvider(widget.documentId))?.title ?? 'Note'} flashcards',
+                  fileBaseName: exportFileName(
+                      ref.read(documentProvider(widget.documentId))?.title ??
+                          'Note',
+                      'Flashcards'),
                   buildText: () => ShareFormat.flashcards(
                     ref.read(documentProvider(widget.documentId))?.title ??
                         'Note',

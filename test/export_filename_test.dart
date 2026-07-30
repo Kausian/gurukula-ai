@@ -30,4 +30,23 @@ void main() {
     expect(sanitizeFileName('   '), 'gurukula-export');
     expect(sanitizeFileName('/\\:*?'), 'gurukula-export');
   });
+
+  group('exportFileName (v1.23.0)', () {
+    final date = DateTime(2026, 7, 26);
+
+    test('combines title, type and a yyyy-MM-dd date, cleaned', () {
+      expect(exportFileName('Biology: Cells', 'Summary', date: date),
+          'Biology Cells Summary 2026-07-26');
+    });
+
+    test('zero-pads month and day', () {
+      expect(exportFileName('Notes', 'Note', date: DateTime(2026, 1, 5)),
+          'Notes Note 2026-01-05');
+    });
+
+    test('falls back for a blank title', () {
+      expect(exportFileName('   ', 'Study pack', date: date),
+          'Gurukula Study pack 2026-07-26');
+    });
+  });
 }

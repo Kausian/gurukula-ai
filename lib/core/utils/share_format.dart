@@ -117,6 +117,129 @@ class ShareFormat {
     return '${_clean(toneLabel)} — $_attribution\n\n${text.trim()}';
   }
 
+  /// The source note itself (v1.23.0), for clean export/sharing.
+  static String note(String title, String body, {DateTime? updatedAt}) {
+    final buffer = StringBuffer()
+      ..writeln('NOTE — ${_clean(title)}')
+      ..writeln('($_attribution)');
+    if (updatedAt != null) {
+      buffer.writeln('Updated: ${_formatDate(updatedAt)}');
+    }
+    buffer.writeln();
+    final trimmed = body.trim();
+    buffer.write(trimmed.isEmpty ? 'This note is empty.' : trimmed);
+    return buffer.toString().trimRight();
+  }
+
+  /// The quiz content — questions with their answers (v1.23.0). This is the
+  /// quiz itself, distinct from [quizResult] which reports a taken attempt.
+  static String quiz(String docTitle, Quiz quiz) {
+    final buffer = StringBuffer()
+      ..writeln(
+          'QUIZ — ${_clean(docTitle)}  (${quiz.questions.length} questions)')
+      ..writeln('($_attribution)')
+      ..writeln();
+    for (var i = 0; i < quiz.questions.length; i++) {
+      final q = quiz.questions[i];
+      buffer.writeln('${i + 1}. ${q.prompt.trim()}');
+      final options = q.options.map((o) => o.trim()).where((o) => o.isNotEmpty);
+      if (options.isNotEmpty) {
+        buffer.writeln('   Options: ${options.join(' / ')}');
+      }
+      buffer.writeln('   Answer: ${q.correctAnswer.trim()}');
+      if (i < quiz.questions.length - 1) buffer.writeln();
+    }
+    return buffer.toString().trimRight();
+  }
+
+  /// A full "study pack" combining the note, summary, flashcards and quiz into
+  /// one professionally structured export (v1.23.0). Missing sections are shown
+  /// as a short placeholder rather than omitted, so the layout stays consistent.
+  static String studyPack({
+    required String title,
+    required String note,
+    Summary? summary,
+    required List<Flashcard> flashcards,
+    Quiz? quiz,
+    DateTime? exportedAt,
+  }) {
+    final when = exportedAt ?? DateTime.now();
+    final buffer = StringBuffer()
+      ..writeln('Gurukula AI Study Export')
+      ..writeln('Title: ${_clean(title)}')
+      ..writeln('Exported: ${_formatDate(when)}')
+      ..writeln('(Generated on your device)')
+      ..writeln();
+
+    buffer
+      ..writeln(_section('Source Note'))
+      ..writeln(note.trim().isEmpty ? 'This note is empty.' : note.trim())
+      ..writeln();
+
+    buffer.writeln(_section('Summary'));
+    if (summary == null) {
+      buffer.writeln('No summary yet.');
+    } else {
+      buffer
+        ..writeln('Short summary')
+        ..writeln(summary.shortSummary.trim())
+        ..writeln()
+        ..writeln('Detailed summary')
+        ..writeln(summary.detailedSummary.trim());
+      if (summary.keyPoints.isNotEmpty) {
+        buffer.writeln();
+        buffer.writeln('Key points');
+        for (final point in summary.keyPoints) {
+          buffer.writeln('• ${point.trim()}');
+        }
+      }
+    }
+    buffer.writeln();
+
+    buffer.writeln(_section('Flashcards'));
+    if (flashcards.isEmpty) {
+      buffer.writeln('No flashcards yet.');
+    } else {
+      for (var i = 0; i < flashcards.length; i++) {
+        final card = flashcards[i];
+        buffer
+          ..writeln('${i + 1}. Q: ${card.question.trim()}')
+          ..writeln('   A: ${card.answer.trim()}');
+      }
+    }
+    buffer.writeln();
+
+    buffer.writeln(_section('Quiz'));
+    if (quiz == null || quiz.questions.isEmpty) {
+      buffer.writeln('No quiz yet.');
+    } else {
+      for (var i = 0; i < quiz.questions.length; i++) {
+        final q = quiz.questions[i];
+        buffer
+          ..writeln('${i + 1}. ${q.prompt.trim()}')
+          ..writeln('   Answer: ${q.correctAnswer.trim()}');
+      }
+    }
+    buffer
+      ..writeln()
+      ..writeln('Privacy Note:')
+      ..write('This export was created locally from Gurukula AI. Your study '
+          'data stays on your device.');
+
+    return buffer.toString().trimRight();
+  }
+
+  static String _section(String title) => '=== $title ===';
+
+  static String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' //
+    ];
+    final local = date.toLocal();
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
+  }
+
   static String _joinList(List<String> values) {
     final cleaned = values.map((v) => v.trim()).where((v) => v.isNotEmpty);
     return cleaned.isEmpty ? '—' : cleaned.join(', ');
