@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart'; // StateProvider (Riverpod 3.x)
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
+import 'local/app_storage.dart';
 import 'local/hive_boxes.dart';
 import 'models/activity_event.dart';
 import 'models/enums.dart';
@@ -31,44 +32,57 @@ import 'repositories/summary_repository.dart';
 // Repository providers. Each binds a repository to its already-opened box.
 // ---------------------------------------------------------------------------
 
+// Sensitive boxes resolve their physical name through [AppStorage.physical]
+// so they transparently use the encrypted twin when encryption is active
+// (v1.22.0). `settings` stays canonical/plaintext.
 final profileRepositoryProvider = Provider<ProfileRepository>(
-  (ref) => ProfileRepository(Hive.box<UserProfile>(HiveBoxes.profiles)),
+  (ref) => ProfileRepository(
+      Hive.box<UserProfile>(AppStorage.physical(HiveBoxes.profiles))),
 );
 
 final documentRepositoryProvider = Provider<DocumentRepository>(
-  (ref) => DocumentRepository(Hive.box<StudyDocument>(HiveBoxes.documents)),
+  (ref) => DocumentRepository(
+      Hive.box<StudyDocument>(AppStorage.physical(HiveBoxes.documents))),
 );
 
 final summaryRepositoryProvider = Provider<SummaryRepository>(
-  (ref) => SummaryRepository(Hive.box<Summary>(HiveBoxes.summaries)),
+  (ref) => SummaryRepository(
+      Hive.box<Summary>(AppStorage.physical(HiveBoxes.summaries))),
 );
 
 final flashcardRepositoryProvider = Provider<FlashcardRepository>(
-  (ref) => FlashcardRepository(Hive.box<Flashcard>(HiveBoxes.flashcards)),
+  (ref) => FlashcardRepository(
+      Hive.box<Flashcard>(AppStorage.physical(HiveBoxes.flashcards))),
 );
 
 final rewriteRepositoryProvider = Provider<RewriteRepository>(
-  (ref) => RewriteRepository(Hive.box<Rewrite>(HiveBoxes.rewrites)),
+  (ref) => RewriteRepository(
+      Hive.box<Rewrite>(AppStorage.physical(HiveBoxes.rewrites))),
 );
 
 final ideaRepositoryProvider = Provider<IdeaRepository>(
-  (ref) => IdeaRepository(Hive.box<Idea>(HiveBoxes.ideas)),
+  (ref) =>
+      IdeaRepository(Hive.box<Idea>(AppStorage.physical(HiveBoxes.ideas))),
 );
 
 final quizRepositoryProvider = Provider<QuizRepository>(
-  (ref) => QuizRepository(Hive.box<Quiz>(HiveBoxes.quizzes)),
+  (ref) =>
+      QuizRepository(Hive.box<Quiz>(AppStorage.physical(HiveBoxes.quizzes))),
 );
 
 final quizResultRepositoryProvider = Provider<QuizResultRepository>(
-  (ref) => QuizResultRepository(Hive.box<QuizResult>(HiveBoxes.quizResults)),
+  (ref) => QuizResultRepository(
+      Hive.box<QuizResult>(AppStorage.physical(HiveBoxes.quizResults))),
 );
 
 final activityRepositoryProvider = Provider<ActivityRepository>(
-  (ref) => ActivityRepository(Hive.box<ActivityEvent>(HiveBoxes.activity)),
+  (ref) => ActivityRepository(
+      Hive.box<ActivityEvent>(AppStorage.physical(HiveBoxes.activity))),
 );
 
 final studyGoalRepositoryProvider = Provider<StudyGoalRepository>(
-  (ref) => StudyGoalRepository(Hive.box<StudyGoal>(HiveBoxes.studyGoals)),
+  (ref) => StudyGoalRepository(
+      Hive.box<StudyGoal>(AppStorage.physical(HiveBoxes.studyGoals))),
 );
 
 // ---------------------------------------------------------------------------

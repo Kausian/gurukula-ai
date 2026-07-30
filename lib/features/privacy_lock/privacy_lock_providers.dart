@@ -3,6 +3,7 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../../core/utils/pin_hasher.dart';
+import '../../data/local/app_storage.dart';
 import '../../data/local/hive_boxes.dart';
 
 /// Immutable Privacy Lock state (v1.21.0).
@@ -146,6 +147,12 @@ class PrivacyLockController extends Notifier<PrivacyLockState> {
   /// Marks the session unlocked after a successful biometric check.
   void unlockWithBiometric() => state = state.copyWith(unlocked: true);
 }
+
+/// Whether study-data boxes are encrypted at rest on this device (v1.22.0).
+/// Set once during storage init, so a plain [Provider] reflecting the flag is
+/// enough.
+final storageProtectionActiveProvider =
+    Provider<bool>((ref) => AppStorage.encryptionActive);
 
 /// The device's biometric authenticator (v1.21.0).
 final localAuthProvider =

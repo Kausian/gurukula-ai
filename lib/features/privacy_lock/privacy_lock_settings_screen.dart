@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/status_badge.dart';
 import 'privacy_lock_providers.dart';
 
 /// Privacy Lock settings (v1.21.0): enable/disable the lock, set/change the
@@ -18,6 +19,7 @@ class PrivacyLockSettingsScreen extends ConsumerWidget {
     final state = ref.watch(privacyLockControllerProvider);
     final biometricAvailable =
         ref.watch(biometricAvailableProvider).value ?? false;
+    final storageProtected = ref.watch(storageProtectionActiveProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Privacy Lock')),
@@ -47,6 +49,62 @@ class PrivacyLockSettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 24),
+            const SectionHeader(title: 'Storage protection'),
+            AppCard(
+              child: Row(
+                children: [
+                  Icon(
+                    storageProtected
+                        ? Icons.lock_rounded
+                        : Icons.lock_open_rounded,
+                    size: 24,
+                    color: storageProtected
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text('Encrypted Storage',
+                                  style: theme.textTheme.titleSmall),
+                            ),
+                            StatusBadge(
+                              label: storageProtected ? 'On' : 'Off',
+                              tone: storageProtected
+                                  ? BadgeTone.success
+                                  : BadgeTone.neutral,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          storageProtected
+                              ? 'Your saved study data is protected on this '
+                                  'device.'
+                              : 'Encrypted storage is not active on this '
+                                  'device. Your study data is still stored '
+                                  'locally only.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Privacy Lock protects app access. Encrypted Storage protects '
+              'saved study data.',
+              style: theme.textTheme.labelSmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 24),
             const SectionHeader(title: 'Lock'),
