@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/profile_repository.dart';
+import '../../services/app_data_reset_service.dart';
 import '../../services/auth_service.dart';
 import 'auth_providers.dart';
 
@@ -72,6 +73,45 @@ class AccountController {
     await _saveProfile(user: user, details: details);
   }
 
+  // ---- Account deletion (v1.27.0) ----
+
+  /// Whether the signed-in account uses email/password (so the delete flow
+  /// should collect the password for re-authentication).
+  bool get isPasswordAccount => _auth.currentProviderIds().contains('password');
+
+  /// Deletes the Firebase account, re-authenticating if Firebase requires a
+  /// recent login, then wipes all local data and signs out.
+  ///
+  /// Firebase is deleted FIRST: local data is only wiped after the account is
+  /// gone, so a failed deletion never silently loses local data. Throws on
+  /// failure (e.g. wrong password, cancelled Google re-auth) with local data
+  /// left intact.
+  Future<void> deleteAccount({String? password}) async {
+    final providers = _auth.currentProviderIds();
+    try {
+      await _auth.deleteAccount();
+    } on FirebaseAuthException catch (e) {
+      if (e.code != 'requires-recent-login') rethrow;
+      // Re-authenticate, then retry the delete.
+      if (providers.contains('password')) {
+        if (password == null || password.isEmpty) {
+          throw FirebaseAuthException(
+              code: 'requires-recent-login', message: e.message);
+        }
+        await _auth.reauthenticateWithPassword(password);
+      } else if (providers.contains('google.com')) {
+        await _auth.reauthenticateWithGoogle();
+      } else {
+        rethrow;
+      }
+      await _auth.deleteAccount();
+    }
+
+    // Account is gone -> safe to wipe local data, then clear the session.
+    await _ref.read(appDataResetProvider).wipeAllLocalData();
+    await _auth.signOut();
+  }
+
   Future<void> _saveProfile({
     required User user,
     required StudentDetails details,
@@ -129,6 +169,9 @@ String authErrorMessage(Object error) {
         return 'Email sign-in is not enabled yet. Please continue with Google.';
       case 'too-many-requests':
         return 'Too many attempts. Please wait a moment and try again.';
+      case 'requires-recent-login':
+        return 'For your security, please re-enter your password (or sign in '
+            'again) to delete your account.';
     }
   }
   return 'Something went wrong. Please try again.';

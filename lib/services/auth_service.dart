@@ -77,4 +77,38 @@ class AuthService {
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
+
+  // ---- Account deletion (v1.27.0) ----
+
+  /// The sign-in providers linked to the current account (e.g. 'password',
+  /// 'google.com'), used to pick the right re-authentication path.
+  List<String> currentProviderIds() =>
+      _auth.currentUser?.providerData.map((p) => p.providerId).toList() ??
+      const [];
+
+  /// Deletes the Firebase account. May throw `requires-recent-login`, in which
+  /// case the caller re-authenticates and retries.
+  Future<void> deleteAccount() => _auth.currentUser?.delete() ?? Future.value();
+
+  /// Re-authenticates an email/password user before a sensitive action.
+  Future<void> reauthenticateWithPassword(String password) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) return;
+    final credential =
+        EmailAuthProvider.credential(email: email, password: password);
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  /// Re-authenticates a Google user by re-running the Google sign-in and
+  /// re-attaching the fresh credential.
+  Future<void> reauthenticateWithGoogle() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await _ensureInitialized();
+    final account = await _googleSignIn.authenticate();
+    final idToken = account.authentication.idToken;
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
+    await user.reauthenticateWithCredential(credential);
+  }
 }

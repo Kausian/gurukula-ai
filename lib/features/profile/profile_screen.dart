@@ -13,6 +13,7 @@ import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../data/providers.dart';
 import '../../services/ai_service.dart';
+import '../../services/app_data_reset_service.dart';
 import '../auth/auth_providers.dart';
 import '../privacy_lock/privacy_lock_providers.dart';
 import '../settings/settings_providers.dart';
@@ -37,6 +38,7 @@ class ProfileScreen extends ConsumerWidget {
     final version = ref.watch(appVersionProvider);
     final lockEnabled =
         ref.watch(privacyLockControllerProvider.select((s) => s.enabled));
+    final storageProtected = ref.watch(storageProtectionActiveProvider);
 
     final name = profile?.username ?? user?.displayName ?? 'Guest student';
     final subtitle = profile == null
@@ -244,6 +246,11 @@ class ProfileScreen extends ConsumerWidget {
                       onTap: () => context.push('/privacy-lock')),
                   const Divider(height: 1),
                   _SettingRow(
+                      icon: Icons.shield_outlined,
+                      label: 'Encrypted Storage',
+                      value: storageProtected ? 'On' : 'Off'),
+                  const Divider(height: 1),
+                  _SettingRow(
                       icon: Icons.school_outlined,
                       label: 'View onboarding',
                       onTap: () => context.push('/onboarding')),
@@ -288,19 +295,29 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 28),
 
-            // Delete local data.
+            // Privacy & data.
+            const SectionHeader(title: 'Privacy & data'),
             AppCard(
-              onTap: () => _confirmDelete(context, ref),
+              onTap: () => _confirmClearLocal(context, ref),
               child: Row(
                 children: [
-                  Icon(Icons.delete_outline_rounded,
-                      size: 22, color: scheme.error),
+                  Icon(Icons.cleaning_services_outlined,
+                      size: 22, color: scheme.onSurfaceVariant),
                   const SizedBox(width: 14),
-                  Text('Delete local data',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(color: scheme.error)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Clear local study data',
+                            style: theme.textTheme.titleSmall),
+                        const SizedBox(height: 2),
+                        Text('Deletes notes and study tools. Keeps your account.',
+                            style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -311,11 +328,40 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => _signOut(context, ref),
               child: Row(
                 children: [
-                  Icon(Icons.logout_rounded, size: 22, color: scheme.error),
+                  Icon(Icons.logout_rounded,
+                      size: 22, color: scheme.onSurfaceVariant),
                   const SizedBox(width: 14),
-                  Text('Sign out',
-                      style: theme.textTheme.titleSmall
-                          ?.copyWith(color: scheme.error)),
+                  Text('Sign out', style: theme.textTheme.titleSmall),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Danger zone.
+            const SectionHeader(title: 'Danger zone'),
+            AppCard(
+              onTap: () => context.push('/delete-account'),
+              borderColor: scheme.error.withValues(alpha: 0.5),
+              child: Row(
+                children: [
+                  Icon(Icons.delete_forever_rounded,
+                      size: 22, color: scheme.error),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Delete account',
+                            style: theme.textTheme.titleSmall
+                                ?.copyWith(color: scheme.error)),
+                        const SizedBox(height: 2),
+                        Text('Permanently deletes your account and all local '
+                            'data.',
+                            style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: scheme.error),
                 ],
               ),
             ),
@@ -420,15 +466,15 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmClearLocal(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete local data?'),
+        title: const Text('Clear local study data?'),
         content: const Text(
-          'This permanently removes all notes, summaries, flashcards, ideas '
-          'and quizzes from this device. Your profile stays. This cannot be '
-          'undone.',
+          'This permanently removes all notes, summaries, flashcards, quizzes, '
+          'ideas and study goals from this device. Your account and student '
+          'profile stay. This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -438,16 +484,16 @@ class ProfileScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: const Text('Clear'),
           ),
         ],
       ),
     );
     if (confirmed == true) {
-      await deleteLocalStudyData(ref);
+      await ref.read(appDataResetProvider).clearStudyData();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Local study data deleted')),
+          const SnackBar(content: Text('Local study data cleared')),
         );
       }
     }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../data/providers.dart';
 import '../features/auth/auth_landing_screen.dart';
 import '../features/auth/auth_providers.dart';
+import '../features/auth/delete_account_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/signup_screen.dart';
 import '../features/home/home_screen.dart';
@@ -206,6 +207,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/privacy-lock',
         builder: (context, state) => const PrivacyLockSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/delete-account',
+        builder: (context, state) => const DeleteAccountScreen(),
       ),
       GoRoute(
         path: '/idea/:id',
