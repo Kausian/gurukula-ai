@@ -265,11 +265,29 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       bool libraryEmpty, LibraryNoteFilter noteFilter, String query) {
     late final EmptyState state;
     if (libraryEmpty) {
-      state = const EmptyState(
+      // First-note guidance for new users (v1.25.0): a clear path to add or
+      // import notes, since a fresh Library has nothing to open yet.
+      state = EmptyState(
         icon: Icons.folder_open_rounded,
-        title: 'Nothing here yet',
-        message: 'Items you create will appear here, all stored privately '
-            'on your device.',
+        title: 'Start your study space',
+        message: 'Add your first note to create summaries, flashcards and '
+            'quizzes. Everything stays on your device.',
+        action: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FilledButton.icon(
+              onPressed: () => context.push('/paste'),
+              icon: const Icon(Icons.edit_note_rounded),
+              label: const Text('Add a note'),
+            ),
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: () => context.go('/upload'),
+              icon: const Icon(Icons.file_upload_outlined, size: 20),
+              label: const Text('Import from file, PDF or scan'),
+            ),
+          ],
+        ),
       );
     } else if (noteFilter == LibraryNoteFilter.favorites) {
       state = const EmptyState(

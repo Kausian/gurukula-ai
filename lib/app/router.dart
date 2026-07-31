@@ -11,6 +11,8 @@ import '../features/idea_lab/idea_form_screen.dart';
 import '../features/idea_lab/idea_lab_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/onboarding/create_profile_screen.dart';
+import '../features/onboarding/onboarding_providers.dart';
+import '../features/onboarding/onboarding_screen.dart';
 import '../features/planner/study_goal_form_screen.dart';
 import '../features/planner/study_planner_screen.dart';
 import '../features/privacy_lock/privacy_lock_settings_screen.dart';
@@ -53,6 +55,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = refresh.value;
       final location = state.matchedLocation;
 
+      // First-run onboarding gate (v1.25.0). Until it's completed, keep the
+      // student on /onboarding. The flag is read straight from the (already
+      // open) settings box rather than a provider, so no provider is
+      // instantiated inside the redirect. Returns early so it never fights the
+      // auth checks below; once completed, behavior is unchanged for everyone.
+      final onboarded = ref.read(onboardingCompletedProvider);
+      if (!onboarded) {
+        return location == '/onboarding' ? null : '/onboarding';
+      }
+
       // Still resolving the session.
       if (auth.isLoading) {
         return location == '/splash' ? null : '/splash';
@@ -82,6 +94,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/welcome',

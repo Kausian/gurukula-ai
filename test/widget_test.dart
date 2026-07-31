@@ -23,8 +23,16 @@ import 'package:gurukula_ai/data/models/enums.dart';
 import 'package:gurukula_ai/data/models/user_profile.dart';
 import 'package:gurukula_ai/data/providers.dart';
 import 'package:gurukula_ai/features/auth/auth_providers.dart';
+import 'package:gurukula_ai/features/onboarding/onboarding_providers.dart';
 import 'package:gurukula_ai/features/study/study_providers.dart';
 import 'package:gurukula_ai/hive_registrar.g.dart';
+
+/// Test double: reports onboarding as already completed without touching Hive,
+/// so the smoke test reaches the Welcome (sign-in) screen it asserts on.
+class _CompletedOnboarding extends OnboardingController {
+  @override
+  bool build() => true;
+}
 
 void main() {
   late Directory tempDir;
@@ -56,6 +64,9 @@ void main() {
       ProviderScope(
         overrides: [
           authStateProvider.overrideWith((ref) => Stream<User?>.value(null)),
+          // v1.25.0: onboarding gates first run. Mark it complete (via override,
+          // not a Hive write) so this smoke test reaches the Welcome screen.
+          onboardingCompletedProvider.overrideWith(_CompletedOnboarding.new),
         ],
         child: const GurukulaApp(),
       ),

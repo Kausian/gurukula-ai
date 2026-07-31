@@ -205,6 +205,11 @@ class ProfileScreen extends ConsumerWidget {
                       onTap: () => context.push('/privacy-lock')),
                   const Divider(height: 1),
                   _SettingRow(
+                      icon: Icons.school_outlined,
+                      label: 'View onboarding',
+                      onTap: () => context.push('/onboarding')),
+                  const Divider(height: 1),
+                  _SettingRow(
                       icon: Icons.translate_rounded,
                       label: 'Language',
                       value: profile?.preferredLanguage ?? 'English'),
