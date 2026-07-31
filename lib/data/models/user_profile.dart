@@ -19,6 +19,7 @@ class UserProfile {
     required this.preferredLanguage,
     required this.createdAt,
     required this.updatedAt,
+    this.institution,
   });
 
   @HiveField(0)
@@ -45,4 +46,9 @@ class UserProfile {
   final DateTime createdAt;
   @HiveField(11)
   final DateTime updatedAt;
+
+  /// Optional school/college/university name (v1.26.0). Nullable so profiles
+  /// saved before this field existed still load.
+  @HiveField(12)
+  final String? institution;
 }

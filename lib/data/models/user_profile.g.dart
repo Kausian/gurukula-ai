@@ -29,13 +29,14 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       preferredLanguage: fields[9] as String,
       createdAt: fields[10] as DateTime,
       updatedAt: fields[11] as DateTime,
+      institution: fields[12] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserProfile obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
       ..writeByte(10)
       ..write(obj.createdAt)
       ..writeByte(11)
-      ..write(obj.updatedAt);
+      ..write(obj.updatedAt)
+      ..writeByte(12)
+      ..write(obj.institution);
   }
 
   @override

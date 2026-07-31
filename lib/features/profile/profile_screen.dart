@@ -95,6 +95,45 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 28),
 
+            // Student profile (v1.26.0): read-only summary of what the student
+            // told us at sign up / profile completion.
+            if (profile != null) ...[
+              const SectionHeader(title: 'Student profile'),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _ProfileInfoRow(
+                        icon: Icons.school_outlined,
+                        label: 'Study level',
+                        value: profile.studyLevel),
+                    const Divider(height: 1),
+                    _ProfileInfoRow(
+                        icon: Icons.menu_book_outlined,
+                        label: 'Course / subject',
+                        value: profile.mainSubject.trim().isEmpty
+                            ? '—'
+                            : profile.mainSubject),
+                    const Divider(height: 1),
+                    _ProfileInfoRow(
+                        icon: Icons.flag_outlined,
+                        label: 'Study goal',
+                        value: profile.learningGoal.trim().isEmpty
+                            ? '—'
+                            : profile.learningGoal),
+                    if ((profile.institution ?? '').trim().isNotEmpty) ...[
+                      const Divider(height: 1),
+                      _ProfileInfoRow(
+                          icon: Icons.apartment_outlined,
+                          label: 'Institution',
+                          value: profile.institution!),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+            ],
+
             // Study stats.
             const SectionHeader(title: 'Study stats'),
             Row(
@@ -513,6 +552,50 @@ class _StatusRow extends StatelessWidget {
         children: [
           Expanded(child: Text(label, style: theme.textTheme.titleSmall)),
           badge,
+        ],
+      ),
+    );
+  }
+}
+
+/// A responsive read-only info row: icon + a stacked label/value column
+/// (v1.26.0). The value wraps to multiple lines instead of squeezing the label,
+/// so long study goals / subjects never overflow on small screens.
+class _ProfileInfoRow extends StatelessWidget {
+  const _ProfileInfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: theme.textTheme.labelMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: theme.textTheme.titleSmall, softWrap: true),
+              ],
+            ),
+          ),
         ],
       ),
     );

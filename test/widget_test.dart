@@ -58,14 +58,15 @@ void main() {
     await tempDir.delete(recursive: true);
   });
 
-  testWidgets('Welcome screen shows brand and primary CTA when signed out',
+  testWidgets('Auth landing shows brand and the three actions when signed out',
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           authStateProvider.overrideWith((ref) => Stream<User?>.value(null)),
-          // v1.25.0: onboarding gates first run. Mark it complete (via override,
-          // not a Hive write) so this smoke test reaches the Welcome screen.
+          // v1.26.0 gates auth first, so a signed-out user lands on the Auth
+          // Landing screen regardless of onboarding. The override keeps the
+          // test independent of any stored onboarding flag.
           onboardingCompletedProvider.overrideWith(_CompletedOnboarding.new),
         ],
         child: const GurukulaApp(),
@@ -73,7 +74,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Study smarter, even offline.'), findsOneWidget);
+    expect(find.text('Your private study companion'), findsOneWidget);
+    expect(find.text('Log in'), findsOneWidget);
+    expect(find.text('Sign up'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
   });
 

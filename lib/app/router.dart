@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/providers.dart';
+import '../features/auth/auth_landing_screen.dart';
 import '../features/auth/auth_providers.dart';
+import '../features/auth/login_screen.dart';
+import '../features/auth/signup_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/idea_lab/idea_detail_screen.dart';
 import '../features/idea_lab/idea_form_screen.dart';
@@ -17,7 +20,6 @@ import '../features/planner/study_goal_form_screen.dart';
 import '../features/planner/study_planner_screen.dart';
 import '../features/privacy_lock/privacy_lock_settings_screen.dart';
 import '../features/onboarding/splash_screen.dart';
-import '../features/onboarding/welcome_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shell/main_shell.dart';
 import '../features/study/import_preview_screen.dart';
@@ -47,45 +49,62 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
   ref.onDispose(refresh.dispose);
 
+  // Also refresh when the local student profile changes, so email sign-up
+  // (which saves the profile after Firebase account creation) transitions
+  // cleanly to onboarding/Home without a race (v1.26.0).
+  final profileTick = ValueNotifier<int>(0);
+  ref.listen(currentProfileProvider, (_, _) => profileTick.value++);
+  ref.onDispose(profileTick.dispose);
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
-    refreshListenable: refresh,
+    refreshListenable: Listenable.merge([refresh, profileTick]),
     redirect: (context, state) {
       final auth = refresh.value;
       final location = state.matchedLocation;
 
-      // First-run onboarding gate (v1.25.0). Until it's completed, keep the
-      // student on /onboarding. The flag is read straight from the (already
-      // open) settings box rather than a provider, so no provider is
-      // instantiated inside the redirect. Returns early so it never fights the
-      // auth checks below; once completed, behavior is unchanged for everyone.
-      final onboarded = ref.read(onboardingCompletedProvider);
-      if (!onboarded) {
-        return location == '/onboarding' ? null : '/onboarding';
-      }
+      // v1.26.0 order: authenticate FIRST, then complete the student profile,
+      // then onboarding. So a new user sees the Auth Landing before anything
+      // else, and onboarding never precedes auth.
 
-      // Still resolving the session.
+      // 1) Still resolving the Firebase session.
       if (auth.isLoading) {
         return location == '/splash' ? null : '/splash';
       }
 
+      // 2) Signed out -> the auth screens (landing / login / sign up).
+      const authRoutes = {'/welcome', '/login', '/signup'};
       final user = auth.value;
       if (user == null) {
-        return location == '/welcome' ? null : '/welcome';
+        return authRoutes.contains(location) ? null : '/welcome';
       }
 
-      // Signed in: is there a local profile for this account yet?
+      // 3) Signed in but no local student profile -> complete it.
       final claimed =
           ref.read(profileRepositoryProvider).byGoogleUid(user.uid) != null;
       if (!claimed) {
         return location == '/create-profile' ? null : '/create-profile';
       }
 
-      // Fully onboarded: keep out of the auth/onboarding screens.
-      if (location == '/splash' ||
-          location == '/welcome' ||
-          location == '/create-profile') {
+      // 4) Signed in + profile, but onboarding not done -> onboarding.
+      //    (/onboarding is left reachable when completed, so Profile's "View
+      //    onboarding" still works; the onboarding screen navigates away on
+      //    finish.)
+      final onboarded = ref.read(onboardingCompletedProvider);
+      if (!onboarded && location != '/onboarding') {
+        return '/onboarding';
+      }
+
+      // 5) Fully ready: keep out of the pre-Home gate screens.
+      const gateScreens = {
+        '/splash',
+        '/welcome',
+        '/login',
+        '/signup',
+        '/create-profile',
+      };
+      if (gateScreens.contains(location)) {
         return '/home';
       }
       return null;
@@ -101,7 +120,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/welcome',
-        builder: (context, state) => const WelcomeScreen(),
+        builder: (context, state) => const AuthLandingScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignUpScreen(),
       ),
       GoRoute(
         path: '/create-profile',

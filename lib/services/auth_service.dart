@@ -40,6 +40,38 @@ class AuthService {
     return _auth.signInWithCredential(credential);
   }
 
+  /// Creates a Firebase account with email + password (v1.26.0).
+  ///
+  /// Requires the Email/Password provider to be enabled in the Firebase
+  /// Console; otherwise Firebase throws `operation-not-allowed`, which callers
+  /// surface as a friendly message. Throws [FirebaseAuthException] on failure.
+  Future<UserCredential> signUpWithEmail({
+    required String email,
+    required String password,
+  }) {
+    return _auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+  }
+
+  /// Signs in with an existing email + password (v1.26.0).
+  Future<UserCredential> signInWithEmail({
+    required String email,
+    required String password,
+  }) {
+    return _auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+  }
+
+  /// Sends a password-reset email (v1.26.0). Firebase handles the email; the
+  /// app never sees or stores the password.
+  Future<void> sendPasswordReset(String email) {
+    return _auth.sendPasswordResetEmail(email: email.trim());
+  }
+
   /// Signs out of both Google and Firebase. Local study data is untouched.
   Future<void> signOut() async {
     await _googleSignIn.signOut();

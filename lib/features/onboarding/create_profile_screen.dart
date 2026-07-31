@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/page_header.dart';
-import '../../data/models/user_profile.dart';
 import '../../data/providers.dart';
+import '../auth/account_controller.dart';
 import '../auth/auth_providers.dart';
 
-/// Collects (or confirms) the student's profile after Google sign-in.
-///
-/// Prefilled from any existing local profile (including the Phase 2 sample),
-/// then saved back to Hive with the Google identity attached.
+/// Complete-your-student-profile step (v1.26.0): shown after Google sign-in
+/// when there is no local student profile yet. Asks only the small set of
+/// student details Gurukula needs — no email/password (Google handles that).
 class CreateProfileScreen extends ConsumerStatefulWidget {
   const CreateProfileScreen({super.key});
 
@@ -22,14 +20,11 @@ class CreateProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
-  static const _levels = ['High school', 'College', 'University', 'Self-learner'];
-  static const _languages = ['English', 'Tamil', 'Hindi', 'Sinhala', 'Other'];
-
-  late final TextEditingController _username;
+  late final TextEditingController _name;
   late final TextEditingController _subject;
-  late final TextEditingController _goal;
+  late final TextEditingController _institution;
   late String _level;
-  late String _language;
+  late String _goal;
   bool _saving = false;
 
   @override
@@ -38,59 +33,46 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
     final existing = ref.read(profileRepositoryProvider).current;
     final user = ref.read(currentUserProvider);
 
-    _username = TextEditingController(
+    _name = TextEditingController(
         text: existing?.username ?? user?.displayName ?? '');
     _subject = TextEditingController(text: existing?.mainSubject ?? '');
-    _goal = TextEditingController(text: existing?.learningGoal ?? '');
-    _level = _levels.contains(existing?.studyLevel)
+    _institution = TextEditingController(text: existing?.institution ?? '');
+    _level = kStudyLevels.contains(existing?.studyLevel)
         ? existing!.studyLevel
         : 'University';
-    _language = _languages.contains(existing?.preferredLanguage)
-        ? existing!.preferredLanguage
-        : 'English';
+    _goal = kStudyGoals.contains(existing?.learningGoal)
+        ? existing!.learningGoal
+        : 'Exams';
   }
 
   @override
   void dispose() {
-    _username.dispose();
+    _name.dispose();
     _subject.dispose();
-    _goal.dispose();
+    _institution.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    if (_username.text.trim().isEmpty) {
+    if (_name.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a username')),
+        const SnackBar(content: Text('Please enter your name')),
       );
       return;
     }
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
-
     setState(() => _saving = true);
-    final repo = ref.read(profileRepositoryProvider);
-    final existing = repo.current;
-    final now = DateTime.now().toUtc();
-
-    final profile = UserProfile(
-      id: existing?.id ?? const Uuid().v4(),
-      googleUid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoUrl: user.photoURL,
-      username: _username.text.trim(),
-      studyLevel: _level,
-      mainSubject: _subject.text.trim(),
-      learningGoal: _goal.text.trim(),
-      preferredLanguage: _language,
-      createdAt: existing?.createdAt ?? now,
-      updatedAt: now,
-    );
-    await repo.save(profile);
-    ref.invalidate(currentProfileProvider);
-
-    if (mounted) context.go('/home');
+    await ref.read(accountControllerProvider).saveProfileForCurrentUser(
+          StudentDetails(
+            fullName: _name.text.trim(),
+            studyLevel: _level,
+            subject: _subject.text.trim(),
+            studyGoal: _goal,
+            institution: _institution.text.trim(),
+          ),
+        );
+    // The router re-evaluates on the profile change; nudging to /splash lets it
+    // route to onboarding (if not completed) or Home.
+    if (mounted) context.go('/splash');
   }
 
   @override
@@ -104,14 +86,15 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             const PageHeader(
-              title: 'Create your profile',
-              subtitle: 'This stays on your device and personalises Gurukula.',
+              title: 'Complete your profile',
+              subtitle: 'A few student details — kept on your device.',
             ),
             const SizedBox(height: 20),
             if (user?.email != null)
               AppCard(
                 color: theme.colorScheme.surfaceContainer,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Row(
                   children: [
                     Icon(Icons.verified_user_rounded,
@@ -126,9 +109,9 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               ),
             const SizedBox(height: 20),
             _Field(
-              label: 'Username',
+              label: 'Full name',
               child: TextField(
-                controller: _username,
+                controller: _name,
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(hintText: 'e.g. Kausian'),
               ),
@@ -138,14 +121,14 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               child: DropdownButtonFormField<String>(
                 initialValue: _level,
                 items: [
-                  for (final l in _levels)
+                  for (final l in kStudyLevels)
                     DropdownMenuItem(value: l, child: Text(l)),
                 ],
                 onChanged: (v) => setState(() => _level = v ?? _level),
               ),
             ),
             _Field(
-              label: 'Main subject / field',
+              label: 'Course or subject area',
               child: TextField(
                 controller: _subject,
                 textCapitalization: TextCapitalization.words,
@@ -154,24 +137,23 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               ),
             ),
             _Field(
-              label: 'Learning goal',
-              child: TextField(
-                controller: _goal,
-                maxLines: 2,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                    hintText: 'e.g. Prepare for exams and build projects'),
+              label: 'Main study goal',
+              child: DropdownButtonFormField<String>(
+                initialValue: _goal,
+                items: [
+                  for (final g in kStudyGoals)
+                    DropdownMenuItem(value: g, child: Text(g)),
+                ],
+                onChanged: (v) => setState(() => _goal = v ?? _goal),
               ),
             ),
             _Field(
-              label: 'Preferred language',
-              child: DropdownButtonFormField<String>(
-                initialValue: _language,
-                items: [
-                  for (final l in _languages)
-                    DropdownMenuItem(value: l, child: Text(l)),
-                ],
-                onChanged: (v) => setState(() => _language = v ?? _language),
+              label: 'Institution (optional)',
+              child: TextField(
+                controller: _institution,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(
+                    hintText: 'e.g. Springfield University'),
               ),
             ),
             const SizedBox(height: 12),
