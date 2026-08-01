@@ -41,13 +41,20 @@ class _AuthLandingScreenState extends ConsumerState<AuthLandingScreen> {
     final scheme = theme.colorScheme;
 
     return Scaffold(
+      // Scroll-safe: keeps the centered look when there is room, and scrolls
+      // instead of overflowing on small screens / large font scaling (v1.29.0).
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(flex: 3),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Spacer(flex: 3),
               // Brand block.
               Column(
                 children: [
@@ -104,8 +111,12 @@ class _AuthLandingScreenState extends ConsumerState<AuthLandingScreen> {
                   ),
                 ],
               ),
-              const Spacer(flex: 1),
-            ],
+                      const Spacer(flex: 1),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
