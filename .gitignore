@@ -48,3 +48,13 @@ app.*.map.json
 # Firebase config (contains project identifiers; add locally, do not commit)
 /android/app/google-services.json
 lib/firebase_options.dart
+
+# Release signing secrets and build artifacts (v1.28.0) — never commit these.
+# (android/.gitignore already ignores key.properties/*.jks/*.keystore; these
+# repo-wide rules are a belt-and-suspenders safety net.)
+key.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+# key.properties.example (placeholders only) is intentionally NOT ignored.

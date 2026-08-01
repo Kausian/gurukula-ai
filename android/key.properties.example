@@ -1,0 +1,16 @@
+# Release signing configuration — EXAMPLE / TEMPLATE (v1.28.0)
+#
+# 1. Copy this file to  android/key.properties
+# 2. Fill in your real values (see docs/play-store/production-signing.md).
+#
+# android/key.properties is git-ignored — NEVER commit it, and NEVER commit the
+# keystore (.jks) it points to. Keep the keystore OUTSIDE this repository and
+# back it up securely; if it is lost, future Play Store updates become hard.
+#
+# All four fields are required. On Windows, use an absolute path with escaped
+# backslashes for storeFile.
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=gurukula-upload
+storeFile=D:\\Gurukula App\\keystores\\gurukula-upload-key.jks
