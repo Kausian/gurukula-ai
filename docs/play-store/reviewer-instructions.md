@@ -66,7 +66,7 @@ Gurukula AI requires sign-in (identity only; study data stays on the device).
 
 ## Links
 
-- Privacy Policy: `https://<YOUR-VERCEL-DOMAIN>/privacy`
-- Terms of Use: `https://<YOUR-VERCEL-DOMAIN>/terms`
-- Data Deletion: `https://<YOUR-VERCEL-DOMAIN>/data-deletion`
+- Privacy Policy: `https://gurukula-ai-landing.vercel.app/privacy`
+- Terms of Use: `https://gurukula-ai-landing.vercel.app/terms`
+- Data Deletion: `https://gurukula-ai-landing.vercel.app/data-deletion`
 - Support email: **skausian@gmail.com**

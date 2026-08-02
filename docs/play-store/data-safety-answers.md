@@ -81,7 +81,7 @@ These stay on the device and are **not** sent anywhere, so they are not
 - **In-app local reset:** Profile → Privacy & data → **Clear local study data**
   (keeps the account).
 - **Data deletion URL (required by Play):**
-  `https://<YOUR-VERCEL-DOMAIN>/data-deletion` — **[Verify]** replace with the
+  `https://gurukula-ai-landing.vercel.app/data-deletion` — **[Verify]** replace with the
   deployed landing domain (the `/data-deletion` page exists in `landing/`).
 
 ## Feature-specific
