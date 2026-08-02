@@ -233,9 +233,9 @@ export default function Home() {
           </div>
           <p>© {new Date().getFullYear()} Gurukula AI. All rights reserved. Created for students with privacy in mind.</p>
           <div className="flex space-x-4">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-foreground transition-colors">Documentation</a>
+            <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-foreground transition-colors">Terms of Service</a>
+            <a href="/data-deletion" className="hover:text-foreground transition-colors">Data Deletion</a>
           </div>
         </div>
       </footer>
