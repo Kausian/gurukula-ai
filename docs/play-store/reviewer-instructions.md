@@ -8,6 +8,21 @@ credentials before submitting.
 
 ---
 
+## Internal / closed testing notes
+
+- This is an **auth-gated** app: the very first screen is a sign-in (Auth
+  Landing). The automated pre-launch crawler cannot complete Google Sign-In on
+  its own, so it will mostly exercise the sign-in screen — this is expected, not
+  a crash.
+- To review beyond sign-in, either use a **provided test account** (below) or
+  create one with **Google Sign-In** (no email needed).
+- **Email/password** paths only work if that Firebase provider is enabled; if
+  not, the app clearly says so and Google Sign-In is the path — expected.
+- **"On-device AI: Not supported"** appears on some devices; the app then uses
+  **local fallback generation** and all study tools still work. Not a bug.
+- Account can be fully removed in-app: **Profile → Danger zone → Delete
+  account** (returns to the sign-in screen).
+
 ## Getting in
 
 Gurukula AI requires sign-in (identity only; study data stays on the device).

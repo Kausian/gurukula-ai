@@ -67,3 +67,33 @@ copy the SHA-1 and SHA-256 under "App signing key certificate".
   id) is the same across debug/release and is not a secret.
 - Email/password sign-in does **not** depend on SHA fingerprints; only Google
   Sign-In does.
+
+## Play Console testing (internal / closed) — do this before/while testing
+
+Google Sign-In **may fail in Play-distributed builds** (internal or closed
+testing) until the **Play app signing** SHA fingerprints are added to Firebase.
+Symptom: sign-in returns/cancels with no account, or `ApiException: 10`.
+
+Exact steps:
+
+1. Upload the signed AAB and **enable Play App Signing** on the first release.
+2. Play Console → your app → **Test and release → App integrity → App signing**.
+3. Under **App signing key certificate**, copy the **SHA-1** and **SHA-256**.
+4. Firebase Console → Project settings → your Android app
+   (`com.gurukula.gurukula_ai`) → **Add fingerprint** → paste the SHA-1, then
+   again for the SHA-256. (Keep any existing debug/upload fingerprints — add,
+   don't remove.)
+5. **Download the updated `google-services.json`.**
+6. Replace `android/app/google-services.json` locally.
+   - This file is **git-ignored** — do **not** commit it.
+7. **Rebuild** the AAB and upload a new testing release (higher versionCode) if
+   the fingerprints changed after your current build:
+   ```powershell
+   flutter build appbundle --release --dart-define="GOOGLE_SERVER_CLIENT_ID=135007688251-7hpgdoiorkdjt4d5fvr7h9nekul6vviq.apps.googleusercontent.com"
+   ```
+8. Install the Play-distributed build on a real device and confirm Google
+   Sign-In completes.
+
+Tip: also add the **upload key** SHA-1/256 (from `keytool`/`gradlew
+signingReport`) so a directly-installed release APK (GitHub Releases) can sign
+in too.
