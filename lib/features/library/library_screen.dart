@@ -162,11 +162,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 onSelected: _onNoteFilterSelected,
               ),
               const SizedBox(height: 8),
-              Row(
+              // OverflowBar keeps the count and the source/sort controls on one
+              // line when they fit, and stacks them when the screen is too
+              // narrow or the font is large, so the row never overflows.
+              OverflowBar(
+                alignment: MainAxisAlignment.spaceBetween,
+                overflowAlignment: OverflowBarAlignment.start,
+                overflowSpacing: 4,
                 children: [
                   Text('${items.length} ${items.length == 1 ? 'item' : 'items'}',
                       style: theme.textTheme.bodySmall),
-                  const Spacer(),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                   PopupMenuButton<LibrarySource?>(
                     initialValue: source,
                     tooltip: 'Filter by source',
@@ -210,6 +218,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         size: 18),
                     label: Text(
                         sort == LibrarySort.newest ? 'Newest' : 'Oldest'),
+                  ),
+                    ],
                   ),
                 ],
               ),

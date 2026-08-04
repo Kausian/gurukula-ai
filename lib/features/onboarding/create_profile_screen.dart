@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/ui/responsive.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/page_header.dart';
 import '../../data/providers.dart';
@@ -82,9 +83,10 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          children: [
+        child: MaxWidthBox(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+            children: [
             const PageHeader(
               title: 'Complete your profile',
               subtitle: 'A few student details — kept on your device.',
@@ -120,6 +122,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               label: 'Study level',
               child: DropdownButtonFormField<String>(
                 initialValue: _level,
+                isExpanded: true,
                 items: [
                   for (final l in kStudyLevels)
                     DropdownMenuItem(value: l, child: Text(l)),
@@ -140,6 +143,7 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
               label: 'Main study goal',
               child: DropdownButtonFormField<String>(
                 initialValue: _goal,
+                isExpanded: true,
                 items: [
                   for (final g in kStudyGoals)
                     DropdownMenuItem(value: g, child: Text(g)),
@@ -167,7 +171,8 @@ class _CreateProfileScreenState extends ConsumerState<CreateProfileScreen> {
                     )
                   : const Text('Save and continue'),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

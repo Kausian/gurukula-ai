@@ -286,6 +286,7 @@ class _SetPinDialogState extends State<_SetPinDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: const Text('Set a PIN'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -332,6 +333,7 @@ class _EnterPinDialogState extends State<_EnterPinDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: Text(widget.title),
       content: _PinField(controller: _pin, hint: 'PIN', autofocus: true),
       actions: [

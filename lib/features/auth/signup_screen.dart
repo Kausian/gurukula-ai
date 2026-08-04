@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/ui/responsive.dart';
 import 'account_controller.dart';
 
 /// Sign up screen (v1.26.0): a compact, student-focused create-account form.
@@ -91,9 +92,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         title: const Text('Create account'),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 28),
-          children: [
+        child: MaxWidthBox(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 28),
+            children: [
             Text('Set up your study space',
                 style: theme.textTheme.headlineSmall),
             const SizedBox(height: 4),
@@ -178,8 +180,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   : const Text('Create account'),
             ),
             const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            // Wrap so the prompt + action never overflow at large font sizes.
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text('Already have an account?',
                     style: theme.textTheme.bodyMedium),
@@ -190,7 +194,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
               ],
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

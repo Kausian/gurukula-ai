@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../ui/responsive.dart';
+
 /// A horizontally scrollable row of pill filter chips.
 ///
 /// Selection is driven by [selectedIndex]; [onSelected] is optional so the row
@@ -19,7 +21,9 @@ class FilterChipRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 38,
+      // Grows with the system font size so chip labels don't clip at large
+      // text scales (v1.31.1).
+      height: Responsive.scaledHeight(context, 38),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: labels.length,

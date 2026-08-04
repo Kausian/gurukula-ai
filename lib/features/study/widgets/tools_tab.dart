@@ -123,8 +123,11 @@ class _ToolsTabState extends ConsumerState<ToolsTab> {
                     Icon(Icons.check_circle_rounded,
                         size: 15, color: theme.colorScheme.primary),
                     const SizedBox(width: 6),
-                    Text('${_resultLabel ?? 'Result'} saved to your Library',
-                        style: theme.textTheme.bodySmall),
+                    Expanded(
+                      child: Text(
+                          '${_resultLabel ?? 'Result'} saved to your Library',
+                          style: theme.textTheme.bodySmall),
+                    ),
                   ],
                 ),
               ],

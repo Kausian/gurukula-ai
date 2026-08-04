@@ -228,8 +228,11 @@ class _QuizTabState extends ConsumerState<QuizTab> {
                 label: 'Saved on device',
                 icon: Icons.lock_rounded,
                 tone: BadgeTone.success),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            // Wrap so the share icons and the regenerate action stack instead
+            // of overflowing on narrow screens / at large font sizes (v1.31.1).
+            Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 ShareActions(
                   label: 'Quiz',

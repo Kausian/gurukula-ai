@@ -118,6 +118,7 @@ class _IdeaFormScreenState extends ConsumerState<IdeaFormScreen> {
               'Skill level',
               DropdownButtonFormField<Difficulty>(
                 initialValue: _level,
+                isExpanded: true,
                 items: [
                   for (final entry in _levels.entries)
                     DropdownMenuItem(value: entry.key, child: Text(entry.value)),
@@ -137,6 +138,7 @@ class _IdeaFormScreenState extends ConsumerState<IdeaFormScreen> {
               'Time limit',
               DropdownButtonFormField<String>(
                 initialValue: _time,
+                isExpanded: true,
                 items: [
                   for (final t in _times)
                     DropdownMenuItem(value: t, child: Text(t)),

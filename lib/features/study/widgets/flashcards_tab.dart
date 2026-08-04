@@ -117,8 +117,11 @@ class _FlashcardsTabState extends ConsumerState<FlashcardsTab> {
           children: [
             Text('${cards.length} cards',
                 style: Theme.of(context).textTheme.titleMedium),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            // Wrap so the share icons and the add-cards action stack instead of
+            // overflowing on narrow screens / at large font sizes (v1.31.1).
+            Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 ShareActions(
                   label: 'Flashcards',

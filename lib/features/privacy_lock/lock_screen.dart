@@ -135,9 +135,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                     Icon(Icons.shield_outlined,
                         size: 14, color: scheme.onSurfaceVariant),
                     const SizedBox(width: 6),
-                    Text('Your study data stays on this device.',
-                        style: theme.textTheme.labelSmall
-                            ?.copyWith(color: scheme.onSurfaceVariant)),
+                    Flexible(
+                      child: Text('Your study data stays on this device.',
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: scheme.onSurfaceVariant)),
+                    ),
                   ],
                 ),
               ],

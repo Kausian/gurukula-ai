@@ -44,8 +44,11 @@ class NoteTab extends ConsumerWidget {
           overflowSpacing: 4,
           children: [
             Text('Source note', style: theme.textTheme.titleMedium),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            // Wrap so the share icons and Edit action stack instead of
+            // overflowing on narrow screens / at large font sizes (v1.31.1).
+            Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 ShareActions(
                   label: 'Note',

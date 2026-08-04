@@ -58,10 +58,16 @@ class MainShell extends StatelessWidget {
             top: BorderSide(color: theme.colorScheme.outline),
           ),
         ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _onDestinationSelected,
-          destinations: _destinations,
+        // Cap how far the 5 nav labels scale (they still grow with the system
+        // font, just not far enough to clip the fixed-height bar). Body content
+        // elsewhere still scales freely. (v1.31.1)
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.3,
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: _onDestinationSelected,
+            destinations: _destinations,
+          ),
         ),
       ),
     );

@@ -24,36 +24,46 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accent = accentColor ?? theme.colorScheme.primary;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                border: Border.all(color: theme.colorScheme.outline),
+    // Scroll-safe (v1.31.1): stays vertically centered when there's room, and
+    // scrolls instead of overflowing on short tab areas or at large font sizes
+    // — the empty states carry chips + buttons that can grow tall.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                      border: Border.all(color: theme.colorScheme.outline),
+                    ),
+                    child: IconChip(icon: icon, color: accent, size: 60),
+                  ),
+                  const SizedBox(height: 22),
+                  Text(title,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  if (action != null) ...[
+                    const SizedBox(height: 24),
+                    action!,
+                  ],
+                ],
               ),
-              child: IconChip(icon: icon, color: accent, size: 60),
             ),
-            const SizedBox(height: 22),
-            Text(title,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium,
-            ),
-            if (action != null) ...[
-              const SizedBox(height: 24),
-              action!,
-            ],
-          ],
+          ),
         ),
       ),
     );

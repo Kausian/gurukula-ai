@@ -215,9 +215,14 @@ class _StudyGoalFormScreenState extends ConsumerState<StudyGoalFormScreen> {
                     Icon(Icons.calendar_today_rounded,
                         size: 18, color: theme.colorScheme.primary),
                     const SizedBox(width: 12),
-                    Text(_dateLabel(_targetDate),
-                        style: theme.textTheme.bodyLarge),
-                    const Spacer(),
+                    // Expanded + ellipsis so a long date never collides with
+                    // the "Change" action at large font sizes.
+                    Expanded(
+                      child: Text(_dateLabel(_targetDate),
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyLarge),
+                    ),
+                    const SizedBox(width: 12),
                     Text('Change',
                         style: theme.textTheme.labelLarge
                             ?.copyWith(color: theme.colorScheme.primary)),

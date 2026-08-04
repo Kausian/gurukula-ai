@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../core/ui/responsive.dart';
 import '../../core/utils/date_format.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/challenge_card.dart';
@@ -79,7 +80,9 @@ class HomeScreen extends ConsumerWidget {
 
             const SectionHeader(title: 'Explore tools'),
             SizedBox(
-              height: 156,
+              // Grows with the system font size so the card labels never clip
+              // at large text scales (v1.31.1).
+              height: Responsive.scaledHeight(context, 156),
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _tools.length,

@@ -41,6 +41,7 @@ class _IdeaDetailScreenState extends ConsumerState<IdeaDetailScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: const Text('Notes'),
         content: TextField(
           controller: controller,

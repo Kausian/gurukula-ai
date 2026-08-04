@@ -163,34 +163,44 @@ class _OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 128,
-            height: 128,
-            decoration: BoxDecoration(
-              color: page.accent.fill.withValues(alpha: 0.22),
-              shape: BoxShape.circle,
+    // Scroll-safe (v1.31.1): the page stays centered when there's room and
+    // scrolls instead of overflowing on short screens or at large font sizes.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 128,
+                  height: 128,
+                  decoration: BoxDecoration(
+                    color: page.accent.fill.withValues(alpha: 0.22),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(page.icon,
+                      size: 60, color: theme.colorScheme.onSurface),
+                ),
+                const SizedBox(height: 36),
+                Text(
+                  page.title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  page.body,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
             ),
-            child: Icon(page.icon, size: 60, color: theme.colorScheme.onSurface),
           ),
-          const SizedBox(height: 36),
-          Text(
-            page.title,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 14),
-          Text(
-            page.body,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ],
+        ),
       ),
     );
   }

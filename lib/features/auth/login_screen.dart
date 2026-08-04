@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/ui/responsive.dart';
 import 'account_controller.dart';
 import 'google_button.dart';
 
@@ -104,9 +105,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 28),
-          children: [
+        child: MaxWidthBox(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 28),
+            children: [
             Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
@@ -169,8 +171,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             const SizedBox(height: 12),
             GoogleButton(busy: _busy, onPressed: _google),
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            // Wrap so the prompt + action never overflow at large font sizes.
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text("Don't have an account?",
                     style: theme.textTheme.bodyMedium),
@@ -181,7 +185,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ],
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
