@@ -46,22 +46,18 @@ class StudyPlannerScreen extends ConsumerWidget {
   }
 
   Widget _empty(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: EmptyState(
-            icon: Icons.event_note_rounded,
-            title: 'Plan your first goal',
-            message: 'Add an exam or study goal to track how many days you '
-                'have left and how ready you feel.',
-            action: FilledButton.icon(
-              onPressed: () => context.push('/planner/new'),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('New goal'),
-            ),
-          ),
-        ),
+    // EmptyState is already scroll-safe and vertically centered, so it is
+    // returned directly — wrapping it in another scroll view left a large
+    // blank gap.
+    return EmptyState(
+      icon: Icons.event_note_rounded,
+      title: 'Plan your first goal',
+      message: 'Add an exam or study goal to track how many days you '
+          'have left and how ready you feel.',
+      action: FilledButton.icon(
+        onPressed: () => context.push('/planner/new'),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('New goal'),
       ),
     );
   }

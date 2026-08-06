@@ -226,7 +226,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               const SizedBox(height: 4),
               Expanded(
                 child: items.isEmpty
-                    ? _emptyState(allItems.isEmpty, noteFilter, query)
+                    ? _emptyState(
+                        libraryEmpty: allItems.isEmpty,
+                        hasQuery: query.trim().isNotEmpty,
+                        noteFilter: noteFilter,
+                      )
                     : ListView.separated(
                         padding: const EdgeInsets.only(top: 4, bottom: 24),
                         itemCount: items.length,
@@ -271,17 +275,40 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  Widget _emptyState(
-      bool libraryEmpty, LibraryNoteFilter noteFilter, String query) {
-    late final EmptyState state;
+  /// Clears the active search query (and the field), so the search empty state
+  /// can offer a one-tap way back to the full list.
+  void _clearSearch() {
+    _search.clear();
+    ref.read(librarySearchProvider.notifier).state = '';
+  }
+
+  /// Resets every filter lens — type chip, source and note lens — back to
+  /// "everything", so the filtered empty state can offer a clean reset.
+  void _clearFilters() {
+    ref.read(libraryFilterProvider.notifier).state = 0;
+    ref.read(librarySourceProvider.notifier).state = null;
+    ref.read(libraryNoteFilterProvider.notifier).state = LibraryNoteFilter.all;
+  }
+
+  /// The right empty state for why the list is empty. Returns the shared
+  /// [EmptyState] directly — it is already scroll-safe and vertically centered,
+  /// so it must NOT be wrapped in another scroll view (doing so was what left a
+  /// large blank gap).
+  ///
+  /// Precedence: a truly empty library first, then a search with no results,
+  /// then the Favorites lens, then a type/source filter that matched nothing.
+  Widget _emptyState({
+    required bool libraryEmpty,
+    required bool hasQuery,
+    required LibraryNoteFilter noteFilter,
+  }) {
     if (libraryEmpty) {
-      // First-note guidance for new users (v1.25.0): a clear path to add or
-      // import notes, since a fresh Library has nothing to open yet.
-      state = EmptyState(
+      // Nothing saved yet: a clear path to add or import the first note.
+      return EmptyState(
         icon: Icons.folder_open_rounded,
-        title: 'Start your study space',
-        message: 'Add your first note to create summaries, flashcards and '
-            'quizzes. Everything stays on your device.',
+        title: 'Your library is empty',
+        message: 'Notes, summaries, flashcards, quizzes, and ideas you create '
+            'will appear here.',
         action: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -294,33 +321,40 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             TextButton.icon(
               onPressed: () => context.go('/upload'),
               icon: const Icon(Icons.file_upload_outlined, size: 20),
-              label: const Text('Import from file, PDF or scan'),
+              label: const Text('Import notes'),
             ),
           ],
         ),
       );
-    } else if (noteFilter == LibraryNoteFilter.favorites) {
-      state = const EmptyState(
-        icon: Icons.star_outline_rounded,
-        title: 'No favorites yet',
-        message: 'Tap the star on a note to keep it here for quick access.',
-      );
-    } else {
-      state = const EmptyState(
+    }
+    if (hasQuery) {
+      return EmptyState(
         icon: Icons.search_off_rounded,
-        title: 'No matches',
-        message: 'Try a different search or filter.',
+        title: 'No results found',
+        message: 'Try a different keyword or clear your filters.',
+        action: TextButton.icon(
+          onPressed: _clearSearch,
+          icon: const Icon(Icons.close_rounded, size: 20),
+          label: const Text('Clear search'),
+        ),
       );
     }
-    // Make the empty state keyboard-safe: when the keyboard shrinks the
-    // available height below the content, it scrolls instead of overflowing,
-    // and stays vertically centered when there is room.
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: state,
-        ),
+    if (noteFilter == LibraryNoteFilter.favorites) {
+      return const EmptyState(
+        icon: Icons.star_outline_rounded,
+        title: 'No favorites yet',
+        message: 'Star notes to keep them easy to find here.',
+      );
+    }
+    // A type/source filter combination that matched nothing.
+    return EmptyState(
+      icon: Icons.filter_list_off_rounded,
+      title: 'Nothing matches these filters',
+      message: 'Try changing your filters or browse all items.',
+      action: TextButton.icon(
+        onPressed: _clearFilters,
+        icon: const Icon(Icons.filter_alt_off_outlined, size: 20),
+        label: const Text('Clear filters'),
       ),
     );
   }
